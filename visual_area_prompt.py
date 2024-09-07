@@ -1,3 +1,5 @@
+from nodes import MAX_RESOLUTION
+
 class VisualAreaPrompt:
     """
     A example node
@@ -54,41 +56,23 @@ class VisualAreaPrompt:
         """
         return {
             "required": {
-                "image": ("IMAGE",),
-                "int_field": ("INT", {
-                    "default": 0, 
-                    "min": 0, #Minimum value
-                    "max": 4096, #Maximum value
-                    "step": 64, #Slider's step
-                    "display": "number", # Cosmetic only: display as "number" or "slider"
-                    "lazy": True # Will only be evaluated if check_lazy_status requires it
-                }),
-                "float_field": ("FLOAT", {
-                    "default": 1.0,
-                    "min": 0.0,
-                    "max": 10.0,
-                    "step": 0.01,
-                    "round": 0.001, #The value representing the precision to round to, will be set to the step value by default. Can be set to False to disable rounding.
-                    "display": "number",
-                    "lazy": True
-                }),
-                "print_to_screen": (["enable", "disable"],),
-                "string_field": ("STRING", {
-                    "multiline": False, #True if you want the field to look like the one on the ClipTextEncode node
-                    "default": "Hello World!",
-                    "lazy": True
-                }),
+                "global_conditioning": ("CONDITIONING", { "tooltip": "Base conditioning. Will be applied to the whole image." }),
+                "conditioning0": ("CONDITIONING", { "tooltip": "Input conditioning. (Connecting a conditioning will create a new input.)" }),
+                "width": ("INT", { "default": 512, "min": 320, "max": MAX_RESOLUTION, "step": 64, "tooltip": "The width of the total space for the conditioning (will not affect the global conditioning.)" }),
+                "height": ("INT", { "default": 512, "min": 320, "max": MAX_RESOLUTION, "step": 64, "tooltip": "The height of the total space for the conditioning (will not affect the global conditioning.)" })
             },
         }
+    
+    OUTPUT_TOOLTIPS = ("Area conditioning","Combined conditioning")
 
-    RETURN_TYPES = ("IMAGE",)
-    #RETURN_NAMES = ("image_output_name",)
+    RETURN_TYPES = ("CONDITIONING","CONDITIONING")
+    RETURN_NAMES = ("area_conditioning","combined_conditioning")
 
     FUNCTION = "test"
 
     #OUTPUT_NODE = False
 
-    CATEGORY = "Example"
+    CATEGORY = "RegionalPrompt"
 
     def check_lazy_status(self, image, string_field, int_field, float_field, print_to_screen):
         """
