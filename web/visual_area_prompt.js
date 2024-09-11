@@ -11,6 +11,9 @@ function addNumberInput(node, inputName, startValue, updateFunc, settings = { mi
 }
 
 function updateWidgetValues(node, index) {
+   if (!node.properties["area_values"][index]) {
+      node.properties["area_values"][index] = [];
+   }
    // Return x value to widget
    const xValue = node.properties["area_values"][index][0];
    node.properties["area_values"][index][0] = xValue ? xValue : 0.0;
@@ -64,9 +67,6 @@ app.registerExtension({
          // Add base controls for conditionings
          addNumberInput(this, "id", 0, (value, _, node) => {
             this.index = value;
-            if (!node.properties["area_values"][this.index]) {
-               node.properties["area_values"][this.index] = [];
-            }
             updateWidgetValues(node, this.index);
          }, { min: 0, max: 0, step: 10, precision: 0 });
          // x value input, has index 0
@@ -159,7 +159,7 @@ app.registerExtension({
             }
             // Set ID widget max to correct value
             this.widgets[0].options.max = (dynamicInputs.length - 1) >= 0 ? (dynamicInputs.length - 1) : 0;
-            updateWidgetValues(this, this.index);
+            updateWidgetValues(this, this.widgets[0].options.max);
             // Return node
             this?.graph?.setDirtyCanvas(true);
             return me;
