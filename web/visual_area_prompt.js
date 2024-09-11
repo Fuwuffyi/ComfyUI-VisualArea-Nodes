@@ -39,8 +39,8 @@ app.registerExtension({
          // Set properties for the elements
          this.setProperty("area_values", []);
          // Add base controls for conditionings
+         // FIXME: Currently node gets no values for idx 0, as it runs only when it returns to idx 0
          addNumberInput(this, "id", 0, (value, _, node) => {
-            console.log(node.properties["area_values"]);
             this.index = value;
             if (!node.properties["area_values"][this.index]) {
                node.properties["area_values"][this.index] = [];
@@ -65,7 +65,7 @@ app.registerExtension({
             const strValue = node.properties["area_values"][this.index][4];
             node.properties["area_values"][this.index][4] = strValue ? strValue : 1.0;
             node.widgets[5].value = strValue ? strValue : 1.0;
-         }, { min: 0, max: 10, step: 10, precision: 0 });
+         }, { min: 0, max: 0, step: 10, precision: 0 });
          // x value input, has index 0
          addNumberInput(this, "x", 0.0, (value, _, node) => {
             node.properties["area_values"][this.index][0] = value;
@@ -154,6 +154,8 @@ app.registerExtension({
                // Add last input to fix the removed ones
                this.addInput(_PREFIX, _TYPE);
             }
+            // Set ID widget max to correct value
+            this.widgets[0].options.max = (dynamicInputs.length - 1) >= 0 ? (dynamicInputs.length - 1) : 0;
             // Return node
             this?.graph?.setDirtyCanvas(true);
             return me;
