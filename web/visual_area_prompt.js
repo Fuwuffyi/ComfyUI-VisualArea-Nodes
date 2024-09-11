@@ -36,10 +36,9 @@ app.registerExtension({
          const me = onNodeCreated?.apply(this);
          // Setup index for current conditioning
          this.index = 0;
-         // Set properties for the elements
-         this.setProperty("area_values", []);
+         // Set properties for the elements (first is initialized because of index 0)
+         this.setProperty("area_values", [[0.0, 0.0, 1.0, 1.0, 1.0]]);
          // Add base controls for conditionings
-         // FIXME: Currently node gets no values for idx 0, as it runs only when it returns to idx 0
          addNumberInput(this, "id", 0, (value, _, node) => {
             this.index = value;
             if (!node.properties["area_values"][this.index]) {

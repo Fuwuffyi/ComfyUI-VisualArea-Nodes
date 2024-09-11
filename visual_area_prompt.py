@@ -25,8 +25,7 @@ class VisualAreaPrompt:
         # TODO: Implement this function
         for node in extra_pnginfo["workflow"]["nodes"]:
             if node["id"] == int(unique_id):
-                # test = node["properties"]["test"]
-                # print(test)
+                print(node["properties"])
                 break
         return (global_conditioning, global_conditioning)
 
