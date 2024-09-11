@@ -1,13 +1,19 @@
 import { app } from "../../scripts/app.js";
 
+function addNumberInput(node, inputName, startValue, updateFunc, settings = { min: 0, max: 1, step: 0.01, precision: 0.01 }) {
+   console.log("TEST");
+   node.addWidget(
+      "number",
+      inputName,
+      startValue,
+      updateFunc,
+      settings
+   )
+}
+
 const TypeSlot = {
    Input: 1,
    Output: 2,
-};
-
-const TypeSlotEvent = {
-   Connect: true,
-   Disconnect: false,
 };
 
 // Id of the node
@@ -29,7 +35,26 @@ app.registerExtension({
       nodeType.prototype.onNodeCreated = async function() {
          // Create node
          const me = onNodeCreated?.apply(this);
-         // Add new input (name, type)
+         // Add base controls for conditionings
+         addNumberInput(this, "id", 0, (value, _, node) => {
+
+         }, { min: 0, max: 10, step: 1, precision: 0, tooltip: "The id of the conditioning settings to change." });
+         addNumberInput(this, "x", 0.0, (value, _, node) => {
+
+         }, { min: 0, max: 1, step: 0.01, precision: 2, tooltip: "The x position of the conditioning (of id)." });
+         addNumberInput(this, "y", 0.0, (value, _, node) => {
+
+         }, { min: 0, max: 1, step: 0.01, precision: 2, tooltip: "The y position of the conditioning (of id)." });
+         addNumberInput(this, "width", 1.0, (value, _, node) => {
+
+         }, { min: 0, max: 1, step: 0.01, precision: 2, tooltip: "The width of the conditioning (of id)." });
+         addNumberInput(this, "height", 1.0, (value, _, node) => {
+
+         }, { min: 0, max: 1, step: 0.01, precision: 2, tooltip: "The height of the conditioning (of id)." });
+         addNumberInput(this, "strength", 1.0, (value, _, node) => {
+
+         }, { min: 0, max: 10, step: 0.01, precision: 2, tooltip: "The weight applied to the conditioning (of id)." });
+         // Add first conditioning (name, type)
          this.addInput(_PREFIX, _TYPE);
          // Return node
          return me;
@@ -46,7 +71,7 @@ app.registerExtension({
             // Skip non dynamic
             if (!dynamicInputs.includes(node_slot)) {
                return me;
-            } else if (link_info && event === TypeSlotEvent.Connect) { // If connects
+            } else if (link_info && event === true) { // If connects
                // Get the parent (left side node) from the link
                const fromNode = this.graph._nodes.find(
                   (otherNode) => otherNode.id == link_info.origin_id
@@ -59,7 +84,7 @@ app.registerExtension({
                      node_slot.name = `${_PREFIX}_`;
                   }
                }
-            } else if (event === TypeSlotEvent.Disconnect) { // If disconnects
+            } else if (event === false) { // If disconnects
                // Remove the input
                this.removeInput(slot_idx);
             }
