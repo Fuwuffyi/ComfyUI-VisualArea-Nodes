@@ -16,8 +16,6 @@ const _ID = "VisualAreaPrompt";
 const _PREFIX = "area-cond_";
 // Type of the input to add
 const _TYPE = "CONDITIONING";
-// Amount of static elements before the dynamic ones
-const _START_DYNAMIC_IDX = 1;
 
 app.registerExtension({
    name: 'fuwuffy.' + _ID,
@@ -98,11 +96,6 @@ app.registerExtension({
             if (lastDynamicInput === undefined || (lastDynamicInput.name !== _PREFIX || lastDynamicInput.type !== _TYPE)) {
                // Add last input to fix the removed ones
                this.addInput(_PREFIX, _TYPE);
-               if (dynamicIndices.length == 0) {
-                  dynamicIndices.push(_START_DYNAMIC_IDX);
-               } else {
-                  dynamicIndices.push(dynamicIndices[dynamicIndices.length - 1] + 1);
-               }
             }
             // Return node
             this?.graph?.setDirtyCanvas(true);
