@@ -142,7 +142,7 @@ app.registerExtension({
                const count = (slot_tracker[name] || 0) + 1;
                slot_tracker[name] = count;
                // Update the slot name with the count if greater than 1
-               slot.name = `${name}_${count}`;
+               slot.name = `${name}_${count - 1}`;
             }
             // Create a list of all dynamic inputs by filtering out static inputs.
             const dynamicIndices = this.inputs
