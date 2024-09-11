@@ -10,15 +10,14 @@ const TypeSlotEvent = {
    Disconnect: false,
 };
 
-// List of dynamic input indices;
-const dynamicIndices = [1];
-
 // Id of the node
 const _ID = "VisualAreaPrompt";
 // Prefix of the input to add
-const _PREFIX = "conditioning_";
+const _PREFIX = "area-cond_";
 // Type of the input to add
 const _TYPE = "CONDITIONING";
+// Amount of static elements before the dynamic ones
+const _START_DYNAMIC_IDX = 1;
 
 app.registerExtension({
    name: 'fuwuffy.' + _ID,
@@ -42,13 +41,14 @@ app.registerExtension({
       nodeType.prototype.onConnectionsChange = function(slotType, slot_idx, event, link_info, node_slot) {
          // Change the connections like normal
          const me = onConnectionsChange?.apply(this, arguments);
+         // Get all dynamic inputs
+         const dynamicInputs = this.inputs.filter((input) => input.name.includes(_PREFIX));
          // Only for inputs
          if (slotType === TypeSlot.Input) {
-            // Skip static inputs
-            if (!dynamicIndices.includes(slot_idx)) {
+            // Skip non dynamic
+            if (!dynamicInputs.includes(node_slot)) {
                return me;
-               // If connects
-            } else if (link_info && event === TypeSlotEvent.Connect) {
+            } else if (link_info && event === TypeSlotEvent.Connect) { // If connects
                // Get the parent (left side node) from the link
                const fromNode = this.graph._nodes.find(
                   (otherNode) => otherNode.id == link_info.origin_id
@@ -61,23 +61,24 @@ app.registerExtension({
                      node_slot.name = `${_PREFIX}_`;
                   }
                }
-               // If disconnects
-            } else if (event === TypeSlotEvent.Disconnect) {
+            } else if (event === TypeSlotEvent.Disconnect) { // If disconnects
                // Remove the input
                this.removeInput(slot_idx);
             }
-            // Create a list of all dynamic inputs by filtering out static inputs.
-            const dynamicInputs = this.inputs.filter((_input, index) => dynamicIndices.includes(index));
-            // Track each slot name so we can index the uniques
             let slot_tracker = {};
-            for (let i = 0; i < dynamicInputs.length; ++i) {
-               // Get current dynamic node
-               const idx = dynamicIndices[i];
-               const slot = dynamicInputs[i];
+            let idx = 0;
+            for (const slot of this.inputs) {
+               // Skip static nodes
+               if (!dynamicInputs.includes(slot)) {
+                  idx += 1;
+                  continue;
+               }
+               // Remove unlinked dynamic nodes
                if (slot.link === null) {
                   this.removeInput(idx);
                   continue;
                }
+               idx += 1;
                const name = slot.name.split('_')[0];
                // Correctly increment the count in slot_tracker
                const count = (slot_tracker[name] || 0) + 1;
@@ -85,6 +86,11 @@ app.registerExtension({
                // Update the slot name with the count if greater than 1
                slot.name = `${name}_${count}`;
             }
+            // Create a list of all dynamic inputs by filtering out static inputs.
+            const dynamicIndices = this.inputs
+               .map((_input, index) => ({ index: index, input: _input }))
+               .filter((obj) => dynamicInputs.includes(obj.input))
+               .map((obj) => obj.index);
             // Find the last dynamic input index
             const lastDynamicInputIndex = dynamicIndices[dynamicIndices.length - 1];
             const lastDynamicInput = this.inputs[lastDynamicInputIndex];
@@ -92,6 +98,11 @@ app.registerExtension({
             if (lastDynamicInput === undefined || (lastDynamicInput.name !== _PREFIX || lastDynamicInput.type !== _TYPE)) {
                // Add last input to fix the removed ones
                this.addInput(_PREFIX, _TYPE);
+               if (dynamicIndices.length == 0) {
+                  dynamicIndices.push(_START_DYNAMIC_IDX);
+               } else {
+                  dynamicIndices.push(dynamicIndices[dynamicIndices.length - 1] + 1);
+               }
             }
             // Return node
             this?.graph?.setDirtyCanvas(true);
