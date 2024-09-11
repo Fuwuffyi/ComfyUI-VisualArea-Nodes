@@ -68,21 +68,25 @@ app.registerExtension({
             }
             console.log(slot_idx, link_info, node_slot);
             // Track each slot name so we can index the uniques
-            let idx = indexesToSkip.length == 0 ? 0 : Math.max(...indexesToSkip) + 1; // Skip the static ones
+            let idx = 0;
             let slot_tracker = {};
-            const actualInputs = this.inputs.slice(idx);
-            for (const slot of actualInputs) {
-               if (slot.link === null) {
-                  this.removeInput(idx);
-                  continue;
+            for (const slot of this.inputs) {
+               // Skip the static ones
+               if (indexesToSkip.includes(idx)) {
+                  idx += 1;
+               } else {
+                  if (slot.link === null) {
+                     this.removeInput(idx);
+                     continue;
+                  }
+                  idx += 1;
+                  const name = slot.name.split('_')[0];
+                  // Correctly increment the count in slot_tracker
+                  const count = (slot_tracker[name] || 0) + 1;
+                  slot_tracker[name] = count;
+                  // Update the slot name with the count if greater than 1
+                  slot.name = `${name}_${count}`;
                }
-               idx += 1;
-               const name = slot.name.split('_')[0];
-               // Correctly increment the count in slot_tracker
-               const count = (slot_tracker[name] || 0) + 1;
-               slot_tracker[name] = count;
-               // Update the slot name with the count if greater than 1
-               slot.name = `${name}_${count}`;
             }
             // Add last input to fix the removed ones
             const last = this.inputs[this.inputs.length - 1];
