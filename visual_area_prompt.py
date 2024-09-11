@@ -1,5 +1,3 @@
-from nodes import MAX_RESOLUTION
-
 class VisualAreaPrompt:
     """
     A example node

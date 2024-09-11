@@ -16,3 +16,5 @@ NODE_CLASS_MAPPINGS = {
 NODE_DISPLAY_NAME_MAPPINGS = {
     "VisualAreaPrompt": "Visual Area Prompt"
 }
+
+WEB_DIRECTORY = "./web"
