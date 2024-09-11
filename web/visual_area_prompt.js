@@ -11,12 +11,12 @@ const TypeSlotEvent = {
 };
 
 // List of static input indices;
-const indexesToSkip = [0];
+const indicesToSkip = [0, 2, 3, 4, 5, 6, 7];
 
 // Id of the node
 const _ID = "VisualAreaPrompt";
 // Prefix of the input to add
-const _PREFIX = "conditioning";
+const _PREFIX = "conditioning_";
 // Type of the input to add
 const _TYPE = "CONDITIONING";
 
@@ -45,7 +45,7 @@ app.registerExtension({
          // Only for inputs
          if (slotType === TypeSlot.Input) {
             // Skip static inputs
-            if (indexesToSkip.includes(slot_idx)) {
+            if (indicesToSkip.includes(slot_idx)) {
                return me;
                // If connects
             } else if (link_info && event === TypeSlotEvent.Connect) {
@@ -66,31 +66,35 @@ app.registerExtension({
                // Remove the input
                this.removeInput(slot_idx);
             }
-            console.log(slot_idx, link_info, node_slot);
+            // Create a list of all dynamic inputs by filtering out static inputs.
+            const dynamicInputs = this.inputs.filter((_input, index) => !indicesToSkip.includes(index));
+            // Calculate the last dynamic input index by filtering out static inputs.
+            const dynamicInputIndices = this.inputs
+               .map((_input, index) => index)
+               .filter((index) => !indicesToSkip.includes(index));
             // Track each slot name so we can index the uniques
-            let idx = 0;
             let slot_tracker = {};
-            for (const slot of this.inputs) {
-               // Skip the static ones
-               if (indexesToSkip.includes(idx)) {
-                  idx += 1;
-               } else {
-                  if (slot.link === null) {
-                     this.removeInput(idx);
-                     continue;
-                  }
-                  idx += 1;
-                  const name = slot.name.split('_')[0];
-                  // Correctly increment the count in slot_tracker
-                  const count = (slot_tracker[name] || 0) + 1;
-                  slot_tracker[name] = count;
-                  // Update the slot name with the count if greater than 1
-                  slot.name = `${name}_${count}`;
+            for (let i = 0; i < dynamicInputs.length; ++i) {
+               // Get current dynamic node
+               const idx = dynamicInputIndices[i];
+               const slot = dynamicInputs[i];
+               if (slot.link === null) {
+                  this.removeInput(idx);
+                  continue;
                }
+               const name = slot.name.split('_')[0];
+               // Correctly increment the count in slot_tracker
+               const count = (slot_tracker[name] || 0) + 1;
+               slot_tracker[name] = count;
+               // Update the slot name with the count if greater than 1
+               slot.name = `${name}_${count}`;
             }
-            // Add last input to fix the removed ones
-            const last = this.inputs[this.inputs.length - 1];
-            if (last === undefined || (last.name != _PREFIX || last.type != _TYPE)) {
+            // Find the last dynamic input index
+            const lastDynamicInputIndex = dynamicInputIndices[dynamicInputIndices.length - 1];
+            const lastDynamicInput = this.inputs[lastDynamicInputIndex];
+            // Check if last dynamic input is defined and matches the prefix/type
+            if (lastDynamicInput === undefined || (lastDynamicInput.name !== _PREFIX || lastDynamicInput.type !== _TYPE)) {
+               // Add last input to fix the removed ones
                this.addInput(_PREFIX, _TYPE);
             }
             // Return node
