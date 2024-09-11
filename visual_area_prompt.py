@@ -5,7 +5,7 @@ class VisualAreaPrompt:
     @classmethod
     def INPUT_TYPES(cls):
         return {
-            "required": {
+            "optional": {
                 "global_conditioning": ("CONDITIONING", { "tooltip": "Base conditioning. Will be applied to the whole image." }),
             },
             "hidden": {
@@ -25,7 +25,8 @@ class VisualAreaPrompt:
         # TODO: Implement this function
         for node in extra_pnginfo["workflow"]["nodes"]:
             if node["id"] == int(unique_id):
-                print(node["properties"])
+                conditioning_areas = node["properties"]["area_values"]
+                print(conditioning_areas)
                 break
         return (global_conditioning, global_conditioning)
 

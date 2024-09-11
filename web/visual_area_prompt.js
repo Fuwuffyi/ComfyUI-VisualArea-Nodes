@@ -10,6 +10,29 @@ function addNumberInput(node, inputName, startValue, updateFunc, settings = { mi
    )
 }
 
+function updateWidgetValues(node, index) {
+   // Return x value to widget
+   const xValue = node.properties["area_values"][index][0];
+   node.properties["area_values"][index][0] = xValue ? xValue : 0.0;
+   node.widgets[1].value = xValue ? xValue : 0.0;
+   // Return y value to widget
+   const yValue = node.properties["area_values"][index][1];
+   node.properties["area_values"][index][1] = yValue ? yValue : 0.0;
+   node.widgets[2].value = yValue ? yValue : 0.0;
+   // Return width value to widget
+   const widthValue = node.properties["area_values"][index][2];
+   node.properties["area_values"][index][2] = widthValue ? widthValue : 1.0;
+   node.widgets[3].value = widthValue ? widthValue : 1.0;
+   // Return height value to widget
+   const heightValue = node.properties["area_values"][index][3];
+   node.properties["area_values"][index][3] = heightValue ? heightValue : 1.0;
+   node.widgets[4].value = heightValue ? heightValue : 1.0;
+   // Return strength value to widget
+   const strValue = node.properties["area_values"][index][4];
+   node.properties["area_values"][index][4] = strValue ? strValue : 1.0;
+   node.widgets[5].value = strValue ? strValue : 1.0;
+}
+
 const TypeSlot = {
    Input: 1,
    Output: 2,
@@ -44,26 +67,7 @@ app.registerExtension({
             if (!node.properties["area_values"][this.index]) {
                node.properties["area_values"][this.index] = [];
             }
-            // Return x value to widget
-            const xValue = node.properties["area_values"][this.index][0];
-            node.properties["area_values"][this.index][0] = xValue ? xValue : 0.0;
-            node.widgets[1].value = xValue ? xValue : 0.0;
-            // Return y value to widget
-            const yValue = node.properties["area_values"][this.index][1];
-            node.properties["area_values"][this.index][1] = yValue ? yValue : 0.0;
-            node.widgets[2].value = yValue ? yValue : 0.0;
-            // Return width value to widget
-            const widthValue = node.properties["area_values"][this.index][2];
-            node.properties["area_values"][this.index][2] = widthValue ? widthValue : 1.0;
-            node.widgets[3].value = widthValue ? widthValue : 1.0;
-            // Return height value to widget
-            const heightValue = node.properties["area_values"][this.index][3];
-            node.properties["area_values"][this.index][3] = heightValue ? heightValue : 1.0;
-            node.widgets[4].value = heightValue ? heightValue : 1.0;
-            // Return strength value to widget
-            const strValue = node.properties["area_values"][this.index][4];
-            node.properties["area_values"][this.index][4] = strValue ? strValue : 1.0;
-            node.widgets[5].value = strValue ? strValue : 1.0;
+            updateWidgetValues(node, this.index);
          }, { min: 0, max: 0, step: 10, precision: 0 });
          // x value input, has index 0
          addNumberInput(this, "x", 0.0, (value, _, node) => {
@@ -155,6 +159,7 @@ app.registerExtension({
             }
             // Set ID widget max to correct value
             this.widgets[0].options.max = (dynamicInputs.length - 1) >= 0 ? (dynamicInputs.length - 1) : 0;
+            updateWidgetValues(this, this.index);
             // Return node
             this?.graph?.setDirtyCanvas(true);
             return me;
