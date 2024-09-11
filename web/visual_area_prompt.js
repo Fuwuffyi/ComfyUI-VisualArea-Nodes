@@ -1,7 +1,6 @@
 import { app } from "../../scripts/app.js";
 
 function addNumberInput(node, inputName, startValue, updateFunc, settings = { min: 0, max: 1, step: 0.01, precision: 0.01 }) {
-   console.log("TEST");
    node.addWidget(
       "number",
       inputName,
@@ -35,25 +34,58 @@ app.registerExtension({
       nodeType.prototype.onNodeCreated = async function() {
          // Create node
          const me = onNodeCreated?.apply(this);
+         // Setup index for current conditioning
+         this.index = 0;
+         // Set properties for the elements
+         this.setProperty("area_values", []);
          // Add base controls for conditionings
          addNumberInput(this, "id", 0, (value, _, node) => {
-
-         }, { min: 0, max: 10, step: 1, precision: 0, tooltip: "The id of the conditioning settings to change." });
+            console.log(node.properties["area_values"]);
+            this.index = value;
+            if (!node.properties["area_values"][this.index]) {
+               node.properties["area_values"][this.index] = [];
+            }
+            // Return x value to widget
+            const xValue = node.properties["area_values"][this.index][0];
+            node.properties["area_values"][this.index][0] = xValue ? xValue : 0.0;
+            node.widgets[1].value = xValue ? xValue : 0.0;
+            // Return y value to widget
+            const yValue = node.properties["area_values"][this.index][1];
+            node.properties["area_values"][this.index][1] = yValue ? yValue : 0.0;
+            node.widgets[2].value = yValue ? yValue : 0.0;
+            // Return width value to widget
+            const widthValue = node.properties["area_values"][this.index][2];
+            node.properties["area_values"][this.index][2] = widthValue ? widthValue : 1.0;
+            node.widgets[3].value = widthValue ? widthValue : 1.0;
+            // Return height value to widget
+            const heightValue = node.properties["area_values"][this.index][3];
+            node.properties["area_values"][this.index][3] = heightValue ? heightValue : 1.0;
+            node.widgets[4].value = heightValue ? heightValue : 1.0;
+            // Return strength value to widget
+            const strValue = node.properties["area_values"][this.index][4];
+            node.properties["area_values"][this.index][4] = strValue ? strValue : 1.0;
+            node.widgets[5].value = strValue ? strValue : 1.0;
+         }, { min: 0, max: 10, step: 10, precision: 0 });
+         // x value input, has index 0
          addNumberInput(this, "x", 0.0, (value, _, node) => {
-
-         }, { min: 0, max: 1, step: 0.01, precision: 2, tooltip: "The x position of the conditioning (of id)." });
+            node.properties["area_values"][this.index][0] = value;
+         }, { min: 0, max: 1, step: 0.1, precision: 2 });
+         // y value input, has index 1
          addNumberInput(this, "y", 0.0, (value, _, node) => {
-
-         }, { min: 0, max: 1, step: 0.01, precision: 2, tooltip: "The y position of the conditioning (of id)." });
+            node.properties["area_values"][this.index][1] = value;
+         }, { min: 0, max: 1, step: 0.1, precision: 2 });
+         // width value input, has index 2
          addNumberInput(this, "width", 1.0, (value, _, node) => {
-
-         }, { min: 0, max: 1, step: 0.01, precision: 2, tooltip: "The width of the conditioning (of id)." });
+            node.properties["area_values"][this.index][2] = value;
+         }, { min: 0, max: 1, step: 0.1, precision: 2 });
+         // height value input, has index 3
          addNumberInput(this, "height", 1.0, (value, _, node) => {
-
-         }, { min: 0, max: 1, step: 0.01, precision: 2, tooltip: "The height of the conditioning (of id)." });
+            node.properties["area_values"][this.index][3] = value;
+         }, { min: 0, max: 1, step: 0.1, precision: 2 });
+         // strength value input, has index 4
          addNumberInput(this, "strength", 1.0, (value, _, node) => {
-
-         }, { min: 0, max: 10, step: 0.01, precision: 2, tooltip: "The weight applied to the conditioning (of id)." });
+            node.properties["area_values"][this.index][4] = value;
+         }, { min: 0, max: 10, step: 0.1, precision: 2 });
          // Add first conditioning (name, type)
          this.addInput(_PREFIX, _TYPE);
          // Return node
