@@ -10,8 +10,8 @@ const TypeSlotEvent = {
    Disconnect: false,
 };
 
-// List of static input indices;
-const indicesToSkip = [0, 2, 3, 4, 5, 6, 7];
+// List of dynamic input indices;
+const dynamicIndices = [1];
 
 // Id of the node
 const _ID = "VisualAreaPrompt";
@@ -45,7 +45,7 @@ app.registerExtension({
          // Only for inputs
          if (slotType === TypeSlot.Input) {
             // Skip static inputs
-            if (indicesToSkip.includes(slot_idx)) {
+            if (!dynamicIndices.includes(slot_idx)) {
                return me;
                // If connects
             } else if (link_info && event === TypeSlotEvent.Connect) {
@@ -67,16 +67,12 @@ app.registerExtension({
                this.removeInput(slot_idx);
             }
             // Create a list of all dynamic inputs by filtering out static inputs.
-            const dynamicInputs = this.inputs.filter((_input, index) => !indicesToSkip.includes(index));
-            // Calculate the last dynamic input index by filtering out static inputs.
-            const dynamicInputIndices = this.inputs
-               .map((_input, index) => index)
-               .filter((index) => !indicesToSkip.includes(index));
+            const dynamicInputs = this.inputs.filter((_input, index) => dynamicIndices.includes(index));
             // Track each slot name so we can index the uniques
             let slot_tracker = {};
             for (let i = 0; i < dynamicInputs.length; ++i) {
                // Get current dynamic node
-               const idx = dynamicInputIndices[i];
+               const idx = dynamicIndices[i];
                const slot = dynamicInputs[i];
                if (slot.link === null) {
                   this.removeInput(idx);
@@ -90,7 +86,7 @@ app.registerExtension({
                slot.name = `${name}_${count}`;
             }
             // Find the last dynamic input index
-            const lastDynamicInputIndex = dynamicInputIndices[dynamicInputIndices.length - 1];
+            const lastDynamicInputIndex = dynamicIndices[dynamicIndices.length - 1];
             const lastDynamicInput = this.inputs[lastDynamicInputIndex];
             // Check if last dynamic input is defined and matches the prefix/type
             if (lastDynamicInput === undefined || (lastDynamicInput.name !== _PREFIX || lastDynamicInput.type !== _TYPE)) {
