@@ -164,7 +164,7 @@ const TypeSlot = {
 // Id of the node
 const _ID = "VisualAreaPrompt";
 // Prefix of the input to add
-const _PREFIX = "area-cond_";
+const _PREFIX = "area-conditioning_";
 // Type of the input to add
 const _TYPE = "CONDITIONING";
 
