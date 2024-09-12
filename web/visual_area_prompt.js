@@ -1,12 +1,12 @@
 import { app } from "../../scripts/app.js";
 
 // Function to generate an hsl color, based on a value and a maximum range
-function generateHslColor(value, max) {
+function generateHslColor(value, max, alpha) {
    if (max <= 0) {
       return `hsl(0, 0%, 0%, 1.0)`;
    }
    const hue = Math.round(((value % max) / max) * 360);
-   return `hsl(${hue}, 100%, 50%, 0.2)`;
+   return `hsl(${hue}, 100%, 50%, ${alpha})`;
 }
 
 function computeCanvasSize(node, size) {
@@ -100,11 +100,20 @@ function addAreaGraphWidget(node) {
          ctx.fillRect(widgetX - border, widgetY - border, backgroudWidth + border * 2, backgroundHeight + border * 2)
          ctx.fillStyle = globalThis.LiteGraph.NODE_DEFAULT_BGCOLOR
          ctx.fillRect(widgetX, widgetY, backgroudWidth, backgroundHeight);
+         // Draw all of the conditioning areas
          for (const [k, v] of values.entries()) {
+            // Skip the selected one, as we need to draw it last to highlight it
+            if (k == node.index) {
+               continue;
+            }
             const [x, y, w, h] = getDrawArea(v);
-            ctx.fillStyle = generateHslColor(k + 1, values.length);
+            ctx.fillStyle = generateHslColor(k + 1, values.length, 0.3);
             ctx.fillRect(widgetX + x, widgetY + y, w, h);
          }
+         // Draw selected index area
+         const [x, y, w, h] = getDrawArea(values[node.index]);
+         ctx.fillStyle = generateHslColor(node.index + 1, values.length, 0.8);
+         ctx.fillRect(widgetX + x, widgetY + y, w, h);
       }
    }
    widget.canvas = document.createElement("canvas");
@@ -266,12 +275,12 @@ app.registerExtension({
                // Update the slot name with the count if greater than 1
                slot.name = `${name}_${count - 1}`;
             }
-            // Set ID widget max to correct value
+            // Set ID widgets to new max index to create base values
             const countDynamicInputs = this.inputs.filter((input) => input.name.includes(_PREFIX)).length;
             const newMaxIdx = (countDynamicInputs - 1) >= 0 ? (countDynamicInputs - 1) : 0;
-            this.index = newMaxIdx;
-            this.widgets[1].options.max = this.index;
-            this.widgets[1].value = this.index;
+            this.widgets[1].options.max = newMaxIdx;
+            updateWidgetValues(this, newMaxIdx);
+            // Restore widget values
             updateWidgetValues(this, this.index);
             // Remove extra values
             this.properties["area_values"] = this.properties["area_values"].slice(0, countDynamicInputs);
