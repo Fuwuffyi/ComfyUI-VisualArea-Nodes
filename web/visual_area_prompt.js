@@ -20,7 +20,7 @@ function computeCanvasSize(node, size) {
    let widgetTotalHeight = 0;
    // Calculate total height for all non-custom widgets
    for (const widget of node.widgets) {
-      if (widget.type !== "customCanvas") {
+      if (widget.type !== "areaCondCanvas") {
          widgetTotalHeight += (widget.computeSize ? widget.computeSize()[1] : widgetBaseHeight) + 5;
       }
    }
@@ -35,7 +35,7 @@ function computeCanvasSize(node, size) {
    let currentY = yBase;
    for (const widget of node.widgets) {
       widget.y = currentY;
-      currentY += (widget.type === "customCanvas" ? remainingHeight : (widget.computeSize ? widget.computeSize()[1] : widgetBaseHeight)) + 4;
+      currentY += (widget.type === "areaCondCanvas" ? remainingHeight : (widget.computeSize ? widget.computeSize()[1] : widgetBaseHeight)) + 4;
    }
    node.canvasHeight = remainingHeight;
 }
@@ -73,8 +73,7 @@ function addAreaGraphWidget(node) {
          }
          let yOffset = margin
          if (backgroundHeight < widgetHeight) {
-            // Added 170 due to the other widgets being in the way
-            yOffset += ((widgetHeight - backgroundHeight) / 2 - margin) + 170;
+            yOffset += (widgetHeight - backgroundHeight) / 2 - margin;
          }
          const getDrawArea = (v) => {
             let x = v[0] * backgroudWidth
