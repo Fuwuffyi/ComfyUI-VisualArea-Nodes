@@ -9,6 +9,6 @@ Repository = "https://github.com/Fuwuffyi/ComfyUI-VisualArea-Nodes"
 #  Used by Comfy Registry https://comfyregistry.org
 
 [tool.comfy]
-PublisherId = ""
+PublisherId = "fuwuffyi"
 DisplayName = "ComfyUI-VisualArea-Nodes"
 Icon = ""
