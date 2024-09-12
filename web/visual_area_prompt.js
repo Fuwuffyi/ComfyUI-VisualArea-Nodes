@@ -1,14 +1,72 @@
 import { app } from "../../scripts/app.js";
 
-function addTestWidget(node, app) {
+function generateHslColor(value, max) {
+   if (max <= 0) {
+      return `hsl(0, 0%, 0%, 1.0)`;
+   }
+   const proportion = (value % max) / max;
+   const hue = Math.round(proportion * 360);
+   return `hsl(${hue}, 100%, 50%, 0.2)`;
+}
+
+function computeCanvasSize(node, size) {
+   if (node.widgets[0].last_y == null) return;
+
+   const MIN_SIZE = 200;
+
+   let y = LiteGraph.NODE_WIDGET_HEIGHT * Math.max(node.inputs.length, node.outputs.length) + 5;
+   let freeSpace = size[1] - y;
+
+   // Compute the height of all non customtext widgets
+   let widgetHeight = 0;
+   for (let i = 0; i < node.widgets.length; i++) {
+      const w = node.widgets[i];
+      if (w.type !== "customCanvas") {
+         if (w.computeSize) {
+            widgetHeight += w.computeSize()[1] + 4;
+         } else {
+            widgetHeight += LiteGraph.NODE_WIDGET_HEIGHT + 5;
+         }
+      }
+   }
+
+   // See how large the canvas can be
+   freeSpace -= widgetHeight;
+
+   // There isnt enough space for all the widgets, increase the size of the node
+   if (freeSpace < MIN_SIZE) {
+      freeSpace = MIN_SIZE;
+      node.size[1] = y + widgetHeight + freeSpace;
+      node.graph.setDirtyCanvas(true);
+   }
+
+   // Position each of the widgets
+   for (const w of node.widgets) {
+      w.y = y;
+      if (w.type === "customCanvas") {
+         y += freeSpace;
+      } else if (w.computeSize) {
+         y += w.computeSize()[1] + 4;
+      } else {
+         y += LiteGraph.NODE_WIDGET_HEIGHT + 4;
+      }
+   }
+
+   node.canvasHeight = freeSpace;
+}
+
+function addTestWidget(node) {
    const widget = {
       type: "areaCondCanvas",
       name: "AreaConditioningCanvas",
       draw: function(ctx, node, widgetWidth, widgetY) {
+         if (!node.canvasHeight) {
+            computeCanvasSize(node, node.size)
+         }
          const t = ctx.getTransform();
-         const margin = 10;
-         const border = 2;
-         const widgetHeight = 200;
+         const margin = 2;
+         const border = 1;
+         const widgetHeight = node.canvasHeight;
          const values = node.properties["area_values"];
          const width = 900;
          const height = 900;
@@ -22,15 +80,16 @@ function addTestWidget(node, app) {
             zIndex: 1,
             pointerEvents: "none",
          });
-         const backgroudWidth = width * scale
-         const backgroundHeight = height * scale
-         let xOffset = margin
+         const backgroudWidth = width * scale;
+         const backgroundHeight = height * scale;
+         let xOffset = margin;
          if (backgroudWidth < widgetWidth) {
-            xOffset += (widgetWidth - backgroudWidth) / 2 - margin
+            xOffset += (widgetWidth - backgroudWidth) / 2 - margin;
          }
          let yOffset = margin
          if (backgroundHeight < widgetHeight) {
-            yOffset += (widgetHeight - backgroundHeight) / 2 - margin
+            // Added 170 due to the other widgets being in the way
+            yOffset += ((widgetHeight - backgroundHeight) / 2 - margin) + 170;
          }
          const getDrawArea = (v) => {
             let x = v[0] * backgroudWidth
@@ -59,7 +118,7 @@ function addTestWidget(node, app) {
          ctx.fillRect(widgetX, widgetY, backgroudWidth, backgroundHeight);
          for (const [k, v] of values.entries()) {
             const [x, y, w, h] = getDrawArea(v);
-            ctx.fillStyle = "#ff000040";
+            ctx.fillStyle = generateHslColor(k + 1, values.length);
             ctx.fillRect(widgetX + x, widgetY + y, w, h);
          }
       }
@@ -69,9 +128,10 @@ function addTestWidget(node, app) {
    widget.parent = node;
    document.body.appendChild(widget.canvas);
    node.addCustomWidget(widget);
+   node.onResize = function(size) {
+      computeCanvasSize(node, size);
+   }
    return {
-      minWidth: 200,
-      minHeight: 200,
       widget
    };
 }
@@ -141,7 +201,7 @@ app.registerExtension({
          // Set properties for the elements (first is initialized because of index 0)
          this.setProperty("area_values", [[0.0, 0.0, 1.0, 1.0, 1.0]]);
          // Add the canvas
-         addTestWidget(this, app);
+         addTestWidget(this);
          // Add base controls for conditionings
          addNumberInput(this, "id", 0, (value, _, node) => {
             this.index = value;
