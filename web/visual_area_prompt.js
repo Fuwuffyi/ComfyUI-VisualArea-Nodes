@@ -1,6 +1,82 @@
 import { app } from "../../scripts/app.js";
 
-function addNumberInput(node, inputName, startValue, updateFunc, settings = { min: 0, max: 1, step: 0.01, precision: 0.01 }) {
+function addTestWidget(node, app) {
+   const widget = {
+      type: "areaCondCanvas",
+      name: "AreaConditioningCanvas",
+      draw: function(ctx, node, widgetWidth, widgetY) {
+         const t = ctx.getTransform();
+         const margin = 10;
+         const border = 2;
+         const widgetHeight = 200;
+         const values = node.properties["area_values"];
+         const width = 900;
+         const height = 900;
+         const scale = Math.min((widgetWidth - margin * 2) / width, (widgetHeight - margin * 2) / height);
+         Object.assign(this.canvas.style, {
+            left: `${t.e}px`,
+            top: `${t.f + (widgetY * t.d)}px`,
+            width: `${widgetWidth * t.a}px`,
+            height: `${widgetHeight * t.d}px`,
+            position: "absolute",
+            zIndex: 1,
+            pointerEvents: "none",
+         });
+         const backgroudWidth = width * scale
+         const backgroundHeight = height * scale
+         let xOffset = margin
+         if (backgroudWidth < widgetWidth) {
+            xOffset += (widgetWidth - backgroudWidth) / 2 - margin
+         }
+         let yOffset = margin
+         if (backgroundHeight < widgetHeight) {
+            yOffset += (widgetHeight - backgroundHeight) / 2 - margin
+         }
+         const getDrawArea = (v) => {
+            let x = v[0] * backgroudWidth
+            let y = v[1] * backgroundHeight
+            let w = v[2] * backgroudWidth
+            let h = v[3] * backgroundHeight
+            if (x > backgroudWidth) {
+               x = backgroudWidth
+            }
+            if (y > backgroundHeight) {
+               y = backgroundHeight
+            }
+            if (x + w > backgroudWidth) {
+               w = Math.max(0, backgroudWidth - x)
+            }
+            if (y + h > backgroundHeight) {
+               h = Math.max(0, backgroundHeight - y)
+            }
+            return [x, y, w, h]
+         }
+         let widgetX = xOffset
+         widgetY = widgetY + yOffset
+         ctx.fillStyle = "#000000"
+         ctx.fillRect(widgetX - border, widgetY - border, backgroudWidth + border * 2, backgroundHeight + border * 2)
+         ctx.fillStyle = globalThis.LiteGraph.NODE_DEFAULT_BGCOLOR
+         ctx.fillRect(widgetX, widgetY, backgroudWidth, backgroundHeight);
+         for (const [k, v] of values.entries()) {
+            const [x, y, w, h] = getDrawArea(v);
+            ctx.fillStyle = "#ff000040";
+            ctx.fillRect(widgetX + x, widgetY + y, w, h);
+         }
+      }
+   }
+   widget.canvas = document.createElement("canvas");
+   widget.canvas.className = "area-cond-canvas";
+   widget.parent = node;
+   document.body.appendChild(widget.canvas);
+   node.addCustomWidget(widget);
+   return {
+      minWidth: 200,
+      minHeight: 200,
+      widget
+   };
+}
+
+function addNumberInput(node, inputName, startValue, updateFunc, settings = { min: 0, max: 1, step: 0.1, precision: 2 }) {
    node.addWidget(
       "number",
       inputName,
@@ -17,23 +93,23 @@ function updateWidgetValues(node, index) {
    // Return x value to widget
    const xValue = node.properties["area_values"][index][0];
    node.properties["area_values"][index][0] = xValue ? xValue : 0.0;
-   node.widgets[1].value = xValue ? xValue : 0.0;
+   node.widgets[2].value = xValue ? xValue : 0.0;
    // Return y value to widget
    const yValue = node.properties["area_values"][index][1];
    node.properties["area_values"][index][1] = yValue ? yValue : 0.0;
-   node.widgets[2].value = yValue ? yValue : 0.0;
+   node.widgets[3].value = yValue ? yValue : 0.0;
    // Return width value to widget
    const widthValue = node.properties["area_values"][index][2];
    node.properties["area_values"][index][2] = widthValue ? widthValue : 1.0;
-   node.widgets[3].value = widthValue ? widthValue : 1.0;
+   node.widgets[4].value = widthValue ? widthValue : 1.0;
    // Return height value to widget
    const heightValue = node.properties["area_values"][index][3];
    node.properties["area_values"][index][3] = heightValue ? heightValue : 1.0;
-   node.widgets[4].value = heightValue ? heightValue : 1.0;
+   node.widgets[5].value = heightValue ? heightValue : 1.0;
    // Return strength value to widget
    const strValue = node.properties["area_values"][index][4];
    node.properties["area_values"][index][4] = strValue ? strValue : 1.0;
-   node.widgets[5].value = strValue ? strValue : 1.0;
+   node.widgets[6].value = strValue ? strValue : 1.0;
 }
 
 const TypeSlot = {
@@ -64,6 +140,8 @@ app.registerExtension({
          this.index = 0;
          // Set properties for the elements (first is initialized because of index 0)
          this.setProperty("area_values", [[0.0, 0.0, 1.0, 1.0, 1.0]]);
+         // Add the canvas
+         addTestWidget(this, app);
          // Add base controls for conditionings
          addNumberInput(this, "id", 0, (value, _, node) => {
             this.index = value;
@@ -144,6 +222,15 @@ app.registerExtension({
                // Update the slot name with the count if greater than 1
                slot.name = `${name}_${count - 1}`;
             }
+            // Set ID widget max to correct value
+            const countDynamicInputs = this.inputs.filter((input) => input.name.includes(_PREFIX)).length;
+            const newMaxIdx = (countDynamicInputs - 1) >= 0 ? (countDynamicInputs - 1) : 0;
+            this.index = newMaxIdx;
+            this.widgets[1].options.max = this.index;
+            this.widgets[1].value = this.index;
+            updateWidgetValues(this, this.index);
+            // Remove extra values
+            this.properties["area_values"] = this.properties["area_values"].slice(0, countDynamicInputs);
             // Create a list of all dynamic inputs by filtering out static inputs.
             const dynamicIndices = this.inputs
                .map((_input, index) => ({ index: index, input: _input }))
@@ -157,9 +244,6 @@ app.registerExtension({
                // Add last input to fix the removed ones
                this.addInput(_PREFIX, _TYPE);
             }
-            // Set ID widget max to correct value
-            this.widgets[0].options.max = (dynamicInputs.length - 1) >= 0 ? (dynamicInputs.length - 1) : 0;
-            updateWidgetValues(this, this.widgets[0].options.max);
             // Return node
             this?.graph?.setDirtyCanvas(true);
             return me;
