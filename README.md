@@ -2,11 +2,11 @@
 
 ## Overview
 
-This extension introduces custom nodes that provide enhanced control over area-based conditioning in ComfyUI. These nodes allow for more precise management of areas of influence by visually defining their scope. Additionally, a compact visual panel is included to preview how these areas will be positioned and scaled within the image.
+This extension adds custom nodes to ComfyUI that offer enhanced control over area-based conditioning. With these nodes, you can precisely manage areas of influence by visually defining their scope. The extension also includes a compact visual panel for previewing how these areas will be positioned and scaled within the image.
 
-These nodes are heavily inspired by [**Davemane42's Custom nodes**](https://github.com/Davemane42/ComfyUI_Dave_CustomNode), as I wanted to allow those nodes to work again for everyone to use.
+The development of these nodes was heavily inspired by [**Davemane42's Custom Nodes**](https://github.com/Davemane42/ComfyUI_Dave_CustomNode), with the goal of making those nodes accessible to everyone once again.
 
-Huge thanks to [**cozy_ex_dynamic**](https://github.com/cozy-comfyui/cozy_ex_dynamic) from which I learned how to make a node with dynamic inputs.
+A special thanks to the [**cozy_ex_dynamic**](https://github.com/cozy-comfyui/cozy_ex_dynamic) repository, which provided invaluable guidance on creating nodes with dynamic inputs.
 
 ## Installation
 
