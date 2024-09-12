@@ -38,3 +38,11 @@ It's a separate conditioning, that applies to the whole image, taking into count
 This is where all the different area conditionings are going to connect. Every time the user connects one, a new one is created.
 
 The rest of the widgets within the node are used to properly define the areas of each of the area conditionings. The id widget is used to choose which area to affect, while the other widgets change the area's properties (position and dimensions)
+
+There are also two outputs:
+
+- area_conditioning
+This is what all the combined conditionings and areas will result in.
+
+- combined_conditioning
+This is all the provided conditionings in a single conditioning.
