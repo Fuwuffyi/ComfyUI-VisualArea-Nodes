@@ -1,61 +1,46 @@
 import { app } from "../../scripts/app.js";
 
+// Function to generate an hsl color, based on a value and a maximum range
 function generateHslColor(value, max) {
    if (max <= 0) {
       return `hsl(0, 0%, 0%, 1.0)`;
    }
-   const proportion = (value % max) / max;
-   const hue = Math.round(proportion * 360);
+   const hue = Math.round(((value % max) / max) * 360);
    return `hsl(${hue}, 100%, 50%, 0.2)`;
 }
 
 function computeCanvasSize(node, size) {
-   if (node.widgets[0].last_y == null) return;
-
+   if (node.widgets[0].last_y == null) {
+      return;
+   }
    const MIN_SIZE = 200;
-
-   let y = LiteGraph.NODE_WIDGET_HEIGHT * Math.max(node.inputs.length, node.outputs.length) + 5;
-   let freeSpace = size[1] - y;
-
-   // Compute the height of all non customtext widgets
-   let widgetHeight = 0;
-   for (let i = 0; i < node.widgets.length; i++) {
-      const w = node.widgets[i];
-      if (w.type !== "customCanvas") {
-         if (w.computeSize) {
-            widgetHeight += w.computeSize()[1] + 4;
-         } else {
-            widgetHeight += LiteGraph.NODE_WIDGET_HEIGHT + 5;
-         }
+   const widgetBaseHeight = LiteGraph.NODE_WIDGET_HEIGHT;
+   const yBase = widgetBaseHeight * Math.max(node.inputs.length, node.outputs.length) + 5;
+   let remainingHeight = size[1] - yBase;
+   let widgetTotalHeight = 0;
+   // Calculate total height for all non-custom widgets
+   for (const widget of node.widgets) {
+      if (widget.type !== "customCanvas") {
+         widgetTotalHeight += (widget.computeSize ? widget.computeSize()[1] : widgetBaseHeight) + 5;
       }
    }
-
-   // See how large the canvas can be
-   freeSpace -= widgetHeight;
-
-   // There isnt enough space for all the widgets, increase the size of the node
-   if (freeSpace < MIN_SIZE) {
-      freeSpace = MIN_SIZE;
-      node.size[1] = y + widgetHeight + freeSpace;
+   // Adjust remaining height and node size if needed
+   remainingHeight -= widgetTotalHeight;
+   if (remainingHeight < MIN_SIZE) {
+      remainingHeight = MIN_SIZE;
+      node.size[1] = yBase + widgetTotalHeight + remainingHeight;
       node.graph.setDirtyCanvas(true);
    }
-
-   // Position each of the widgets
-   for (const w of node.widgets) {
-      w.y = y;
-      if (w.type === "customCanvas") {
-         y += freeSpace;
-      } else if (w.computeSize) {
-         y += w.computeSize()[1] + 4;
-      } else {
-         y += LiteGraph.NODE_WIDGET_HEIGHT + 4;
-      }
+   // Position each widget within the canvas
+   let currentY = yBase;
+   for (const widget of node.widgets) {
+      widget.y = currentY;
+      currentY += (widget.type === "customCanvas" ? remainingHeight : (widget.computeSize ? widget.computeSize()[1] : widgetBaseHeight)) + 4;
    }
-
-   node.canvasHeight = freeSpace;
+   node.canvasHeight = remainingHeight;
 }
 
-function addTestWidget(node) {
+function addAreaGraphWidget(node) {
    const widget = {
       type: "areaCondCanvas",
       name: "AreaConditioningCanvas",
@@ -201,7 +186,7 @@ app.registerExtension({
          // Set properties for the elements (first is initialized because of index 0)
          this.setProperty("area_values", [[0.0, 0.0, 1.0, 1.0, 1.0]]);
          // Add the canvas
-         addTestWidget(this);
+         addAreaGraphWidget(this);
          // Add base controls for conditionings
          addNumberInput(this, "id", 0, (value, _, node) => {
             this.index = value;
