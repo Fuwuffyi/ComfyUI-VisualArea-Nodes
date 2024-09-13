@@ -10,6 +10,7 @@ class VisualAreaPrompt:
             "required": {
                 "general_conditioning": ("CONDITIONING", { "tooltip": "Base conditioning. Will be concatenated to all other conditionings." }),
                 "global_conditioning": ("CONDITIONING", { "tooltip": "Base conditioning. Will be applied to the whole image once." }),
+                "merge_global": ("BOOLEAN", { "default": False, "tooltip": "Turning this on will make it so that the global conditioning will be concatenated to all other conditionings before being applied. (will not affect combined_conditioning output)." }),
             },
             "hidden": {
                 "extra_pnginfo": "EXTRA_PNGINFO", 
@@ -24,7 +25,7 @@ class VisualAreaPrompt:
     OUTPUT_NODE = False
     CATEGORY = "RegionalPrompt"
 
-    def run_node(self, general_conditioning, global_conditioning, extra_pnginfo, unique_id, **kwargs):
+    def run_node(self, general_conditioning, global_conditioning, merge_global, extra_pnginfo, unique_id, **kwargs):
         # Get values for the conditioning areas from the extra_pnginfo
         conditioning_areas: list[list[float]] = []
         for node in extra_pnginfo["workflow"]["nodes"]:
@@ -42,7 +43,7 @@ class VisualAreaPrompt:
         for cond in conditionings[1:]:
             last_concat: Node = graph.node("ConditioningConcat", conditioning_to=last_concat.out(0), conditioning_from=cond)
         # Combine with global conditioning
-        combined_conditioning: Node = graph.node("ConditioningConcat", conditioning_to=last_concat.out(0), conditioning_from=global_conditioning)
+        last_concat: Node = graph.node("ConditioningConcat", conditioning_to=last_concat.out(0), conditioning_from=global_conditioning)
         # Concat general to all other area conditionings (to: general, from: cond)
         conditionings_general: list = []
         for cond in conditionings:
@@ -67,9 +68,9 @@ class VisualAreaPrompt:
         for cond in conditionings_area[2:]:
             last_combine: Node = graph.node("ConditioningCombine", conditioning_1=last_combine.out(0), conditioning_2=cond.out(0))
         # Final combination with the previously combined conditioning
-        output: Node = graph.node("ConditioningCombine", conditioning_1=last_combine.out(0), conditioning_2=combined_conditioning.out(0))
+        output: Node = graph.node("ConditioningCombine", conditioning_1=last_combine.out(0), conditioning_2=last_concat.out(0) if merge_global else global_conditioning)
         # Return result and expanded graph
         return {
-            "result": (output.out(0), combined_conditioning.out(0)),
+            "result": (output.out(0), last_concat.out(0)),
             "expand": graph.finalize()
         }

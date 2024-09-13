@@ -36,7 +36,7 @@ function generateHslColor(value, max, alpha) {
 }
 
 function computeCanvasSize(node, size) {
-   if (node.widgets[0].last_y == null) {
+   if (node.widgets[1].last_y == null) {
       return;
    }
    const yBase = WIDGET_BASE_HEIGHT * Math.max(node.inputs.length, node.outputs.length) + 5;
@@ -152,8 +152,8 @@ function updateWidgetValues(node) {
    [..._AREA_DEFAULTS].forEach((value, i) => {
       const newValue = areaValues[i] || value;
       node.properties["area_values"][node.index][i] = newValue;
-      // Offset by two because there are two widgets that should not change (graph and id)
-      node.widgets[i + 2].value = newValue;
+      // Offset by three because there are three widgets that should not change (boolean, graph and id)
+      node.widgets[i + 3].value = newValue;
    });
 }
 
@@ -245,8 +245,8 @@ app.registerExtension({
          // Set ID widget new max and value
          const countDynamicInputs = this.inputs.filter((input) => input.name.includes(_PREFIX)).length;
          const newMaxIdx = (countDynamicInputs - 1) >= 0 ? (countDynamicInputs - 1) : 0;
-         this.widgets[1].options.max = newMaxIdx;
-         this.widgets[1].value = newMaxIdx;
+         this.widgets[2].options.max = newMaxIdx;
+         this.widgets[2].value = newMaxIdx;
          this.index = newMaxIdx;
          updateWidgetValues(this);
          // Remove extra values
