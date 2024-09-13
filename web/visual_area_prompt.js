@@ -137,16 +137,16 @@ function addNumberInput(node, inputName, startValue, updateFunc, settings = { mi
 }
 
 // Update widget values for a specific index
-function updateWidgetValues(node, index) {
+function updateWidgetValues(node) {
    // If that index does not exist, set it
-   if (!node.properties["area_values"][index]) {
-      node.properties["area_values"][index] = [];
+   if (!node.properties["area_values"][node.index]) {
+      node.properties["area_values"][node.index] = [];
    }
-   const areaValues = node.properties["area_values"][index];
+   const areaValues = node.properties["area_values"][node.index];
    // Set the value to the index's value, or the default
    _AREA_DEFAULTS.forEach((value, i) => {
       const newValue = areaValues[i] || value;
-      node.properties["area_values"][index][i] = newValue;
+      node.properties["area_values"][node.index][i] = newValue;
       // Offset by two because there are two widgets that should not change (graph and id)
       node.widgets[i + 2].value = newValue;
    });
@@ -173,7 +173,7 @@ app.registerExtension({
          // Add area selection control
          addNumberInput(this, "id", 0, (value, _, node) => {
             node.index = value;
-            updateWidgetValues(node, node.index);
+            updateWidgetValues(node);
          }, { min: 0, max: 0, step: 10, precision: 0 });
          // Add conditioning controls
          ["x", "y", "width", "height", "strength"].forEach((name, i) => {
@@ -237,13 +237,13 @@ app.registerExtension({
             // Update the slot name with the count if greater than 1
             slot.name = `${name}_${count - 1}`;
          }
-         // Set ID widgets to new max index to create base values
+         // Set ID widget new max and value
          const countDynamicInputs = this.inputs.filter((input) => input.name.includes(_PREFIX)).length;
          const newMaxIdx = (countDynamicInputs - 1) >= 0 ? (countDynamicInputs - 1) : 0;
          this.widgets[1].options.max = newMaxIdx;
-         updateWidgetValues(this, newMaxIdx);
-         // Restore widget values
-         updateWidgetValues(this, this.index);
+         this.widgets[1].value = newMaxIdx;
+         this.index = newMaxIdx;
+         updateWidgetValues(this);
          // Remove extra values
          this.properties["area_values"] = this.properties["area_values"].slice(0, countDynamicInputs);
          // Create a list of all dynamic inputs by filtering out static inputs.
