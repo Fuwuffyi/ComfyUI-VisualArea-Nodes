@@ -1,5 +1,31 @@
 import { app } from "../../scripts/app.js";
 
+// TODO: Make these two parameters to visualize areas that are not 1:1
+const IMAGE_WIDTH = 900;
+const IMAGE_HEIGHT = 900;
+// Type of the canvas widget
+const WIDGET_CANVAS_TYPE = 'areaCondCanvas';
+// Default height for all widgets
+const WIDGET_BASE_HEIGHT = LiteGraph.NODE_WIDGET_HEIGHT;
+// Default size for canvas widget
+const CANVAS_MIN_SIZE = 200;
+// Margin of the canvas
+const CANVAS_MARGIN = 6;
+// Border size of the canvas
+const CANVAS_BORDER = 2;
+// Border color of the canvas
+const CANVAS_BORDER_COLOR = "#000000";
+// Id of the node
+const _ID = "VisualAreaPrompt";
+// Prefix of the input to add
+const _PREFIX = "area-conditioning_";
+// Type of the input to add
+const _TYPE = "CONDITIONING";
+// Defaults for area widgets
+const _AREA_DEFAULTS = [0.0, 0.0, 1.0, 1.0, 1.0];
+
+const TypeSlot = { Input: 1, Output: 2 };
+
 // Function to generate an hsl color, based on a value and a maximum range
 function generateHslColor(value, max, alpha) {
    if (max <= 0) {
@@ -13,45 +39,40 @@ function computeCanvasSize(node, size) {
    if (node.widgets[0].last_y == null) {
       return;
    }
-   const MIN_SIZE = 200;
-   const widgetBaseHeight = LiteGraph.NODE_WIDGET_HEIGHT;
-   const yBase = widgetBaseHeight * Math.max(node.inputs.length, node.outputs.length) + 5;
+   const yBase = WIDGET_BASE_HEIGHT * Math.max(node.inputs.length, node.outputs.length) + 5;
    let remainingHeight = size[1] - yBase;
+   // Calculate total height of non-canvas widgets
    const widgetTotalHeight = node.widgets.reduce((totalHeight, widget) => {
-      if (widget.type !== "areaCondCanvas") {
-         totalHeight += (widget.computeSize ? widget.computeSize()[1] : widgetBaseHeight) + 5;
+      if (widget.type !== WIDGET_CANVAS_TYPE) {
+         totalHeight += (widget.computeSize ? widget.computeSize()[1] : WIDGET_BASE_HEIGHT) + 5;
       }
       return totalHeight;
    }, 0);
-   remainingHeight = Math.max(remainingHeight - widgetTotalHeight, MIN_SIZE);
+   // Calculate canvas height
+   remainingHeight = Math.max(remainingHeight - widgetTotalHeight, CANVAS_MIN_SIZE);
    node.size[1] = yBase + widgetTotalHeight + remainingHeight;
    node.graph.setDirtyCanvas(true);
    // Position each widget within the canvas
    let currentY = yBase;
    node.widgets.forEach(widget => {
       widget.y = currentY;
-      currentY += (widget.type === "areaCondCanvas" ? remainingHeight : (widget.computeSize ? widget.computeSize()[1] : widgetBaseHeight)) + 4;
+      currentY += (widget.type === WIDGET_CANVAS_TYPE ? remainingHeight : (widget.computeSize ? widget.computeSize()[1] : WIDGET_BASE_HEIGHT)) + 4;
    });
    node.canvasHeight = remainingHeight;
 }
 
 function addAreaGraphWidget(node) {
    const widget = {
-      type: "areaCondCanvas",
+      type: WIDGET_CANVAS_TYPE,
       name: "AreaConditioningCanvas",
       draw: function(ctx, node, widgetWidth, widgetY) {
          if (!node.canvasHeight) {
             computeCanvasSize(node, node.size)
          }
-         // Display variables
-         const width = 900;
-         const height = 900;
-         const margin = 2;
-         const border = 1;
          // Canvas variables
          const transform = ctx.getTransform();
-         const { canvasHeight: widgetHeight } = node;
-         const scale = Math.min((widgetWidth - margin * 2) / width, (widgetHeight - margin * 2) / height);
+         const widgetHeight = node.canvasHeight;
+         const scale = Math.min((widgetWidth - CANVAS_MARGIN * 2) / IMAGE_WIDTH, (widgetHeight - CANVAS_MARGIN * 2) / IMAGE_HEIGHT);
          // Get values from node
          const values = node.properties["area_values"];
          // Set canvas position and size in DOM
@@ -65,10 +86,10 @@ function addAreaGraphWidget(node) {
             pointerEvents: "none",
          });
          // Calculate canvas draw dimensions
-         const backgroundWidth = width * scale;
-         const backgroundHeight = height * scale;
-         const xOffset = margin + (backgroundWidth < widgetWidth ? (widgetWidth - backgroundWidth) / 2 - margin : 0);
-         const yOffset = margin + (backgroundHeight < widgetHeight ? (widgetHeight - backgroundHeight) / 2 - margin : 0);
+         const backgroundWidth = IMAGE_WIDTH * scale;
+         const backgroundHeight = IMAGE_HEIGHT * scale;
+         const xOffset = CANVAS_MARGIN + (backgroundWidth < widgetWidth ? (widgetWidth - backgroundWidth) / 2 - CANVAS_MARGIN : 0);
+         const yOffset = CANVAS_MARGIN + (backgroundHeight < widgetHeight ? (widgetHeight - backgroundHeight) / 2 - CANVAS_MARGIN : 0);
          // Transforms the node's area values to canvas pixel dimensions
          const getDrawArea = ([x, y, w, h] = []) => [
             Math.min(x * backgroundWidth, backgroundWidth),
@@ -85,7 +106,7 @@ function addAreaGraphWidget(node) {
          const widgetX = xOffset;
          const widgetYOffset = widgetY + yOffset;
          // Draw the canvas's background and border
-         drawRect(widgetX - border, widgetYOffset - border, backgroundWidth + border * 2, backgroundHeight + border * 2, "#000000");
+         drawRect(widgetX - CANVAS_BORDER, widgetYOffset - CANVAS_BORDER, backgroundWidth + CANVAS_BORDER * 2, backgroundHeight + CANVAS_BORDER * 2, CANVAS_BORDER_COLOR);
          drawRect(widgetX, widgetYOffset, backgroundWidth, backgroundHeight, globalThis.LiteGraph.NODE_DEFAULT_BGCOLOR);
          // Draw all conditioning areas
          values.forEach((v, k) => {
@@ -109,20 +130,6 @@ function addAreaGraphWidget(node) {
    node.onResize = size => computeCanvasSize(node, size);
    return { widget };
 }
-
-const TypeSlot = {
-   Input: 1,
-   Output: 2,
-};
-
-// Id of the node
-const _ID = "VisualAreaPrompt";
-// Prefix of the input to add
-const _PREFIX = "area-conditioning_";
-// Type of the input to add
-const _TYPE = "CONDITIONING";
-
-const _AREA_DEFAULTS = [0.0, 0.0, 1.0, 1.0, 1.0];
 
 // Adds a numerical widget to the node
 function addNumberInput(node, inputName, startValue, updateFunc, settings = { min: 0, max: 1, step: 0.1, precision: 2 }) {
