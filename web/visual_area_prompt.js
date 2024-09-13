@@ -110,23 +110,6 @@ function addAreaGraphWidget(node) {
    return { widget };
 }
 
-// Adds a numerical widget to the node
-function addNumberInput(node, inputName, startValue, updateFunc, settings = { min: 0, max: 1, step: 0.1, precision: 2 }) {
-   node.addWidget("number", inputName, startValue, updateFunc, settings);
-}
-
-// Update widget values for a specific index
-function updateWidgetValues(node, index) {
-   const defaults = [0.0, 0.0, 1.0, 1.0, 1.0];
-   const areaValues = node.properties["area_values"][index] || [];
-   // Set the value to the index's value, or the default
-   areaValues.forEach((value, i) => {
-      const newValue = value || defaults[i];
-      node.properties["area_values"][index][i] = newValue;
-      node.widgets[i + 2].value = newValue;
-   });
-}
-
 const TypeSlot = {
    Input: 1,
    Output: 2,
@@ -138,6 +121,29 @@ const _ID = "VisualAreaPrompt";
 const _PREFIX = "area-conditioning_";
 // Type of the input to add
 const _TYPE = "CONDITIONING";
+
+const _AREA_DEFAULTS = [0.0, 0.0, 1.0, 1.0, 1.0];
+
+// Adds a numerical widget to the node
+function addNumberInput(node, inputName, startValue, updateFunc, settings = { min: 0, max: 1, step: 0.1, precision: 2 }) {
+   node.addWidget("number", inputName, startValue, updateFunc, settings);
+}
+
+// Update widget values for a specific index
+function updateWidgetValues(node, index) {
+   // If that index does not exist, set it
+   if (!node.properties["area_values"][index]) {
+      node.properties["area_values"][index] = [];
+   }
+   const areaValues = node.properties["area_values"][index];
+   console.log(areaValues, index)
+   // Set the value to the index's value, or the default
+   _AREA_DEFAULTS.forEach((value, i) => {
+      const newValue = areaValues[i] || value;
+      node.properties["area_values"][index][i] = newValue;
+      node.widgets[i + 2].value = newValue;
+   });
+}
 
 app.registerExtension({
    name: 'fuwuffy.' + _ID,
@@ -154,34 +160,20 @@ app.registerExtension({
          // Setup index for current conditioning
          this.index = 0;
          // Set properties for the elements (first is initialized because of index 0)
-         this.setProperty("area_values", [[0.0, 0.0, 1.0, 1.0, 1.0]]);
+         this.setProperty("area_values", [_AREA_DEFAULTS]);
          // Add the canvas
          addAreaGraphWidget(this);
-         // Add base controls for conditionings
+         // Add area selection control
          addNumberInput(this, "id", 0, (value, _, node) => {
             this.index = value;
             updateWidgetValues(node, this.index);
          }, { min: 0, max: 0, step: 10, precision: 0 });
-         // x value input, has index 0
-         addNumberInput(this, "x", 0.0, (value, _, node) => {
-            node.properties["area_values"][this.index][0] = value;
-         }, { min: 0, max: 1, step: 0.1, precision: 2 });
-         // y value input, has index 1
-         addNumberInput(this, "y", 0.0, (value, _, node) => {
-            node.properties["area_values"][this.index][1] = value;
-         }, { min: 0, max: 1, step: 0.1, precision: 2 });
-         // width value input, has index 2
-         addNumberInput(this, "width", 1.0, (value, _, node) => {
-            node.properties["area_values"][this.index][2] = value;
-         }, { min: 0, max: 1, step: 0.1, precision: 2 });
-         // height value input, has index 3
-         addNumberInput(this, "height", 1.0, (value, _, node) => {
-            node.properties["area_values"][this.index][3] = value;
-         }, { min: 0, max: 1, step: 0.1, precision: 2 });
-         // strength value input, has index 4
-         addNumberInput(this, "strength", 1.0, (value, _, node) => {
-            node.properties["area_values"][this.index][4] = value;
-         }, { min: 0, max: 10, step: 0.1, precision: 2 });
+         // Add conditioning controls
+         ["x", "y", "width", "height", "strength"].forEach((name, i) => {
+            addNumberInput(this, name, _AREA_DEFAULTS[i], (value, _, node) => {
+               node.properties["area_values"][this.index][i] = value;
+            }, { min: 0, max: i === 4 ? 10 : 1, step: 0.1, precision: 2 });
+         });
          // Add first conditioning (name, type)
          this.addInput(_PREFIX, _TYPE);
          // Return node
