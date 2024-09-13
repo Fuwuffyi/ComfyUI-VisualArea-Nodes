@@ -74,6 +74,9 @@ function addAreaGraphWidget(node) {
             yOffset += (widgetHeight - backgroundHeight) / 2 - margin;
          }
          const getDrawArea = (v) => {
+            if (!v) {
+               return [0, 0, 0, 0];
+            }
             let x = v[0] * backgroudWidth
             let y = v[1] * backgroundHeight
             let w = v[2] * backgroudWidth
@@ -91,6 +94,7 @@ function addAreaGraphWidget(node) {
                h = Math.max(0, backgroundHeight - y)
             }
             return [x, y, w, h]
+
          }
          let widgetX = xOffset
          widgetY = widgetY + yOffset
