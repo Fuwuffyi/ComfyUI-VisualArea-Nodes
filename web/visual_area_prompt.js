@@ -172,13 +172,13 @@ app.registerExtension({
          addAreaGraphWidget(this);
          // Add area selection control
          addNumberInput(this, "id", 0, (value, _, node) => {
-            this.index = value;
-            updateWidgetValues(node, this.index);
+            node.index = value;
+            updateWidgetValues(node, node.index);
          }, { min: 0, max: 0, step: 10, precision: 0 });
          // Add conditioning controls
          ["x", "y", "width", "height", "strength"].forEach((name, i) => {
             addNumberInput(this, name, _AREA_DEFAULTS[i], (value, _, node) => {
-               node.properties["area_values"][this.index][i] = value;
+               node.properties["area_values"][node.index][i] = value;
             }, { min: 0, max: i === 4 ? 10 : 1, step: 0.1, precision: 2 });
          });
          // Add first conditioning (name, type)
