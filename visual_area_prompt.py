@@ -62,7 +62,7 @@ class VisualAreaPrompt:
                 strength=area_values[4]
             ))
         # Combine all conditionings together
-        last_combine: Node = graph.node("ConditioningCombine", conditioning_1=conditionings_area[0].out(0), conditioning_2=conditionings_area[1].out(0))
+        last_combine: Node = conditionings_area[0] if len(conditionings_area) <= 1 else graph.node("ConditioningCombine", conditioning_1=conditionings_area[0].out(0), conditioning_2=conditionings_area[1].out(0))
         # Start loop from the third element (two are already combined)
         for cond in conditionings_area[2:]:
             last_combine: Node = graph.node("ConditioningCombine", conditioning_1=last_combine.out(0), conditioning_2=cond.out(0))
