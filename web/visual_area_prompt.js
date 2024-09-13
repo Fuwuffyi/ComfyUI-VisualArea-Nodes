@@ -23,18 +23,15 @@ function computeCanvasSize(node, size) {
       }
       return totalHeight;
    }, 0);
-   remainingHeight -= widgetTotalHeight;
-   if (remainingHeight < MIN_SIZE) {
-      remainingHeight = MIN_SIZE;
-      node.size[1] = yBase + widgetTotalHeight + remainingHeight;
-      node.graph.setDirtyCanvas(true);
-   }
+   remainingHeight = Math.max(remainingHeight - widgetTotalHeight, MIN_SIZE);
+   node.size[1] = yBase + widgetTotalHeight + remainingHeight;
+   node.graph.setDirtyCanvas(true);
    // Position each widget within the canvas
    let currentY = yBase;
-   for (const widget of node.widgets) {
+   node.widgets.forEach(widget => {
       widget.y = currentY;
       currentY += (widget.type === "areaCondCanvas" ? remainingHeight : (widget.computeSize ? widget.computeSize()[1] : widgetBaseHeight)) + 4;
-   }
+   });
    node.canvasHeight = remainingHeight;
 }
 
@@ -46,76 +43,51 @@ function addAreaGraphWidget(node) {
          if (!node.canvasHeight) {
             computeCanvasSize(node, node.size)
          }
-         const t = ctx.getTransform();
-         const margin = 2;
-         const border = 1;
-         const widgetHeight = node.canvasHeight;
+         const transform = ctx.getTransform();
+         const margin = 2, border = 1;
+         const { canvasHeight: widgetHeight } = node;
          const values = node.properties["area_values"];
          const width = 900;
          const height = 900;
          const scale = Math.min((widgetWidth - margin * 2) / width, (widgetHeight - margin * 2) / height);
          Object.assign(this.canvas.style, {
-            left: `${t.e}px`,
-            top: `${t.f + (widgetY * t.d)}px`,
-            width: `${widgetWidth * t.a}px`,
-            height: `${widgetHeight * t.d}px`,
+            left: `${transform.e}px`,
+            top: `${transform.f + (widgetY * transform.d)}px`,
+            width: `${widgetWidth * transform.a}px`,
+            height: `${widgetHeight * transform.d}px`,
             position: "absolute",
             zIndex: 1,
             pointerEvents: "none",
          });
-         const backgroudWidth = width * scale;
+         const backgroundWidth = width * scale;
          const backgroundHeight = height * scale;
-         let xOffset = margin;
-         if (backgroudWidth < widgetWidth) {
-            xOffset += (widgetWidth - backgroudWidth) / 2 - margin;
-         }
-         let yOffset = margin
-         if (backgroundHeight < widgetHeight) {
-            yOffset += (widgetHeight - backgroundHeight) / 2 - margin;
-         }
-         const getDrawArea = (v) => {
-            if (!v) {
-               return [0, 0, 0, 0];
-            }
-            let x = v[0] * backgroudWidth
-            let y = v[1] * backgroundHeight
-            let w = v[2] * backgroudWidth
-            let h = v[3] * backgroundHeight
-            if (x > backgroudWidth) {
-               x = backgroudWidth
-            }
-            if (y > backgroundHeight) {
-               y = backgroundHeight
-            }
-            if (x + w > backgroudWidth) {
-               w = Math.max(0, backgroudWidth - x)
-            }
-            if (y + h > backgroundHeight) {
-               h = Math.max(0, backgroundHeight - y)
-            }
-            return [x, y, w, h]
-
-         }
-         let widgetX = xOffset
-         widgetY = widgetY + yOffset
-         ctx.fillStyle = "#000000"
-         ctx.fillRect(widgetX - border, widgetY - border, backgroudWidth + border * 2, backgroundHeight + border * 2)
-         ctx.fillStyle = globalThis.LiteGraph.NODE_DEFAULT_BGCOLOR
-         ctx.fillRect(widgetX, widgetY, backgroudWidth, backgroundHeight);
-         // Draw all of the conditioning areas
-         for (const [k, v] of values.entries()) {
-            // Skip the selected one, as we need to draw it last to highlight it
-            if (k == node.index) {
-               continue;
+         const xOffset = margin + (backgroundWidth < widgetWidth ? (widgetWidth - backgroundWidth) / 2 - margin : 0);
+         const yOffset = margin + (backgroundHeight < widgetHeight ? (widgetHeight - backgroundHeight) / 2 - margin : 0);
+         const getDrawArea = ([x, y, w, h] = []) => [
+            Math.min(x * backgroundWidth, backgroundWidth),
+            Math.min(y * backgroundHeight, backgroundHeight),
+            Math.max(0, Math.min(w * backgroundWidth, backgroundWidth - x * backgroundWidth)),
+            Math.max(0, Math.min(h * backgroundHeight, backgroundHeight - y * backgroundHeight)),
+         ];
+         const drawRect = (x, y, w, h, color) => {
+            ctx.fillStyle = color;
+            ctx.fillRect(x, y, w, h);
+         };
+         const widgetX = xOffset, widgetYOffset = widgetY + yOffset;
+         drawRect(widgetX - border, widgetYOffset - border, backgroundWidth + border * 2, backgroundHeight + border * 2, "#000000");
+         drawRect(widgetX, widgetYOffset, backgroundWidth, backgroundHeight, globalThis.LiteGraph.NODE_DEFAULT_BGCOLOR);
+         // Draw all conditioning areas
+         values.forEach((v, k) => {
+            // Skip selected area to draw later on top
+            if (k === node.index) {
+               return;
             }
             const [x, y, w, h] = getDrawArea(v);
-            ctx.fillStyle = generateHslColor(k + 1, values.length, 0.3);
-            ctx.fillRect(widgetX + x, widgetY + y, w, h);
-         }
-         // Draw selected index area
+            drawRect(widgetX + x, widgetYOffset + y, w, h, generateHslColor(k + 1, values.length, 0.3));
+         });
+         // Draw selected area
          const [x, y, w, h] = getDrawArea(values[node.index]);
-         ctx.fillStyle = generateHslColor(node.index + 1, values.length, 0.8);
-         ctx.fillRect(widgetX + x, widgetY + y, w, h);
+         drawRect(widgetX + x, widgetYOffset + y, w, h, generateHslColor(node.index + 1, values.length, 0.8));
       }
    }
    widget.canvas = document.createElement("canvas");
