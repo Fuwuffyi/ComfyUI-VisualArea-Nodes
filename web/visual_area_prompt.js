@@ -136,7 +136,6 @@ function updateWidgetValues(node, index) {
       node.properties["area_values"][index] = [];
    }
    const areaValues = node.properties["area_values"][index];
-   console.log(areaValues, index)
    // Set the value to the index's value, or the default
    _AREA_DEFAULTS.forEach((value, i) => {
       const newValue = areaValues[i] || value;
