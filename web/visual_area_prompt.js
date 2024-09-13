@@ -91,12 +91,17 @@ function addAreaGraphWidget(node) {
          const xOffset = CANVAS_MARGIN + (backgroundWidth < widgetWidth ? (widgetWidth - backgroundWidth) / 2 - CANVAS_MARGIN : 0);
          const yOffset = CANVAS_MARGIN + (backgroundHeight < widgetHeight ? (widgetHeight - backgroundHeight) / 2 - CANVAS_MARGIN : 0);
          // Transforms the node's area values to canvas pixel dimensions
-         const getDrawArea = ([x, y, w, h] = []) => [
-            Math.min(x * backgroundWidth, backgroundWidth),
-            Math.min(y * backgroundHeight, backgroundHeight),
-            Math.max(0, Math.min(w * backgroundWidth, backgroundWidth - x * backgroundWidth)),
-            Math.max(0, Math.min(h * backgroundHeight, backgroundHeight - y * backgroundHeight)),
-         ];
+         const getDrawArea = (arr) => {
+            if (!arr || arr.length < 4) {
+               return [0, 0, 0, 0];
+            }
+            return [
+               Math.min(arr[0] * backgroundWidth, backgroundWidth),
+               Math.min(arr[1] * backgroundHeight, backgroundHeight),
+               Math.max(0, Math.min(arr[2] * backgroundWidth, backgroundWidth - arr[0] * backgroundWidth)),
+               Math.max(0, Math.min(arr[3] * backgroundHeight, backgroundHeight - arr[1] * backgroundHeight)),
+            ];
+         }
          // Draws a rectangle on the canvas
          const drawRect = (x, y, w, h, color) => {
             ctx.fillStyle = color;
