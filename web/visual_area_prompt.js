@@ -43,13 +43,18 @@ function addAreaGraphWidget(node) {
          if (!node.canvasHeight) {
             computeCanvasSize(node, node.size)
          }
-         const transform = ctx.getTransform();
-         const margin = 2, border = 1;
-         const { canvasHeight: widgetHeight } = node;
-         const values = node.properties["area_values"];
+         // Display variables
          const width = 900;
          const height = 900;
+         const margin = 2;
+         const border = 1;
+         // Canvas variables
+         const transform = ctx.getTransform();
+         const { canvasHeight: widgetHeight } = node;
          const scale = Math.min((widgetWidth - margin * 2) / width, (widgetHeight - margin * 2) / height);
+         // Get values from node
+         const values = node.properties["area_values"];
+         // Set canvas position and size in DOM
          Object.assign(this.canvas.style, {
             left: `${transform.e}px`,
             top: `${transform.f + (widgetY * transform.d)}px`,
@@ -59,21 +64,27 @@ function addAreaGraphWidget(node) {
             zIndex: 1,
             pointerEvents: "none",
          });
+         // Calculate canvas draw dimensions
          const backgroundWidth = width * scale;
          const backgroundHeight = height * scale;
          const xOffset = margin + (backgroundWidth < widgetWidth ? (widgetWidth - backgroundWidth) / 2 - margin : 0);
          const yOffset = margin + (backgroundHeight < widgetHeight ? (widgetHeight - backgroundHeight) / 2 - margin : 0);
+         // Transforms the node's area values to canvas pixel dimensions
          const getDrawArea = ([x, y, w, h] = []) => [
             Math.min(x * backgroundWidth, backgroundWidth),
             Math.min(y * backgroundHeight, backgroundHeight),
             Math.max(0, Math.min(w * backgroundWidth, backgroundWidth - x * backgroundWidth)),
             Math.max(0, Math.min(h * backgroundHeight, backgroundHeight - y * backgroundHeight)),
          ];
+         // Draws a rectangle on the canvas
          const drawRect = (x, y, w, h, color) => {
             ctx.fillStyle = color;
             ctx.fillRect(x, y, w, h);
          };
-         const widgetX = xOffset, widgetYOffset = widgetY + yOffset;
+         // Calculate widget positions
+         const widgetX = xOffset;
+         const widgetYOffset = widgetY + yOffset;
+         // Draw the canvas's background and border
          drawRect(widgetX - border, widgetYOffset - border, backgroundWidth + border * 2, backgroundHeight + border * 2, "#000000");
          drawRect(widgetX, widgetYOffset, backgroundWidth, backgroundHeight, globalThis.LiteGraph.NODE_DEFAULT_BGCOLOR);
          // Draw all conditioning areas
@@ -99,40 +110,21 @@ function addAreaGraphWidget(node) {
    return { widget };
 }
 
+// Adds a numerical widget to the node
 function addNumberInput(node, inputName, startValue, updateFunc, settings = { min: 0, max: 1, step: 0.1, precision: 2 }) {
-   node.addWidget(
-      "number",
-      inputName,
-      startValue,
-      updateFunc,
-      settings
-   )
+   node.addWidget("number", inputName, startValue, updateFunc, settings);
 }
 
+// Update widget values for a specific index
 function updateWidgetValues(node, index) {
-   if (!node.properties["area_values"][index]) {
-      node.properties["area_values"][index] = [];
-   }
-   // Return x value to widget
-   const xValue = node.properties["area_values"][index][0];
-   node.properties["area_values"][index][0] = xValue ? xValue : 0.0;
-   node.widgets[2].value = xValue ? xValue : 0.0;
-   // Return y value to widget
-   const yValue = node.properties["area_values"][index][1];
-   node.properties["area_values"][index][1] = yValue ? yValue : 0.0;
-   node.widgets[3].value = yValue ? yValue : 0.0;
-   // Return width value to widget
-   const widthValue = node.properties["area_values"][index][2];
-   node.properties["area_values"][index][2] = widthValue ? widthValue : 1.0;
-   node.widgets[4].value = widthValue ? widthValue : 1.0;
-   // Return height value to widget
-   const heightValue = node.properties["area_values"][index][3];
-   node.properties["area_values"][index][3] = heightValue ? heightValue : 1.0;
-   node.widgets[5].value = heightValue ? heightValue : 1.0;
-   // Return strength value to widget
-   const strValue = node.properties["area_values"][index][4];
-   node.properties["area_values"][index][4] = strValue ? strValue : 1.0;
-   node.widgets[6].value = strValue ? strValue : 1.0;
+   const defaults = [0.0, 0.0, 1.0, 1.0, 1.0];
+   const areaValues = node.properties["area_values"][index] || [];
+   // Set the value to the index's value, or the default
+   areaValues.forEach((value, i) => {
+      const newValue = value || defaults[i];
+      node.properties["area_values"][index][i] = newValue;
+      node.widgets[i + 2].value = newValue;
+   });
 }
 
 const TypeSlot = {
