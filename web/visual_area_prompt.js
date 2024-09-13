@@ -17,14 +17,12 @@ function computeCanvasSize(node, size) {
    const widgetBaseHeight = LiteGraph.NODE_WIDGET_HEIGHT;
    const yBase = widgetBaseHeight * Math.max(node.inputs.length, node.outputs.length) + 5;
    let remainingHeight = size[1] - yBase;
-   let widgetTotalHeight = 0;
-   // Calculate total height for all non-custom widgets
-   for (const widget of node.widgets) {
+   const widgetTotalHeight = node.widgets.reduce((totalHeight, widget) => {
       if (widget.type !== "areaCondCanvas") {
-         widgetTotalHeight += (widget.computeSize ? widget.computeSize()[1] : widgetBaseHeight) + 5;
+         totalHeight += (widget.computeSize ? widget.computeSize()[1] : widgetBaseHeight) + 5;
       }
-   }
-   // Adjust remaining height and node size if needed
+      return totalHeight;
+   }, 0);
    remainingHeight -= widgetTotalHeight;
    if (remainingHeight < MIN_SIZE) {
       remainingHeight = MIN_SIZE;
@@ -121,12 +119,8 @@ function addAreaGraphWidget(node) {
    widget.parent = node;
    document.body.appendChild(widget.canvas);
    node.addCustomWidget(widget);
-   node.onResize = function(size) {
-      computeCanvasSize(node, size);
-   }
-   return {
-      widget
-   };
+   node.onResize = size => computeCanvasSize(node, size);
+   return { widget };
 }
 
 function addNumberInput(node, inputName, startValue, updateFunc, settings = { min: 0, max: 1, step: 0.1, precision: 2 }) {
