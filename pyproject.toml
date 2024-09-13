@@ -1,7 +1,7 @@
 [project]
 name = "comfyui-visualarea-nodes"
 description = "This is a collection of nodes created to aid when managing area conditionings."
-version = "1.0.5"
+version = "1.0.6"
 license = {file = "LICENSE"}
 
 [project.urls]

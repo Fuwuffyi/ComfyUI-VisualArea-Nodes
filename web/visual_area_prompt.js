@@ -1,8 +1,5 @@
 import { app } from "../../scripts/app.js";
 
-// TODO: Make these two parameters to visualize areas that are not 1:1
-const IMAGE_WIDTH = 900;
-const IMAGE_HEIGHT = 900;
 // Type of the canvas widget
 const WIDGET_CANVAS_TYPE = 'areaCondCanvas';
 // Default height for all widgets
@@ -36,7 +33,7 @@ function generateHslColor(value, max, alpha) {
 }
 
 function computeCanvasSize(node, size) {
-   if (node.widgets[1].last_y == null) {
+   if (node.widgets[3].last_y == null) {
       return;
    }
    const yBase = WIDGET_BASE_HEIGHT * Math.max(node.inputs.length, node.outputs.length) + 5;
@@ -72,7 +69,9 @@ function addAreaGraphWidget(node) {
          // Canvas variables
          const transform = ctx.getTransform();
          const widgetHeight = node.canvasHeight;
-         const scale = Math.min((widgetWidth - CANVAS_MARGIN * 2) / IMAGE_WIDTH, (widgetHeight - CANVAS_MARGIN * 2) / IMAGE_HEIGHT);
+         const imageWidth = node.properties["image_width"] || 512;
+         const imageHeight = node.properties["image_height"] || 512;
+         const scale = Math.min((widgetWidth - CANVAS_MARGIN * 2) / imageWidth, (widgetHeight - CANVAS_MARGIN * 2) / imageHeight);
          // Get values from node
          const values = node.properties["area_values"];
          // Set canvas position and size in DOM
@@ -86,8 +85,8 @@ function addAreaGraphWidget(node) {
             pointerEvents: "none",
          });
          // Calculate canvas draw dimensions
-         const backgroundWidth = IMAGE_WIDTH * scale;
-         const backgroundHeight = IMAGE_HEIGHT * scale;
+         const backgroundWidth = imageWidth * scale;
+         const backgroundHeight = imageHeight * scale;
          const xOffset = CANVAS_MARGIN + (backgroundWidth < widgetWidth ? (widgetWidth - backgroundWidth) / 2 - CANVAS_MARGIN : 0);
          const yOffset = CANVAS_MARGIN + (backgroundHeight < widgetHeight ? (widgetHeight - backgroundHeight) / 2 - CANVAS_MARGIN : 0);
          // Transforms the node's area values to canvas pixel dimensions
@@ -152,8 +151,8 @@ function updateWidgetValues(node) {
    [..._AREA_DEFAULTS].forEach((value, i) => {
       const newValue = areaValues[i] || value;
       node.properties["area_values"][node.index][i] = newValue;
-      // Offset by three because there are three widgets that should not change (boolean, graph and id)
-      node.widgets[i + 3].value = newValue;
+      // Offset by five because there are five widgets that should not change (boolean, imgWidth, imgHeight, graph and id)
+      node.widgets[i + 5].value = newValue;
    });
 }
 
@@ -173,6 +172,14 @@ app.registerExtension({
          this.index = 0;
          // Set properties for the elements (first is initialized because of index 0)
          this.setProperty("area_values", [..._AREA_DEFAULTS]);
+         // Add imageWidth and imageHeight widgets
+         ["image_width", "image_height"].forEach((name, _idx) => {
+            addNumberInput(this, name, 512, (value, _, node) => {
+               const s = 640 / 10;
+               this.value = Math.round(value / s) * s;
+               node.properties[name] = this.value
+            }, { min: 0, max: 4096, step: 640, precision: 0 });
+         });
          // Add the canvas
          addAreaGraphWidget(this);
          // Add area selection control
@@ -245,8 +252,8 @@ app.registerExtension({
          // Set ID widget new max and value
          const countDynamicInputs = this.inputs.filter((input) => input.name.includes(_PREFIX)).length;
          const newMaxIdx = (countDynamicInputs - 1) >= 0 ? (countDynamicInputs - 1) : 0;
-         this.widgets[2].options.max = newMaxIdx;
-         this.widgets[2].value = newMaxIdx;
+         this.widgets[4].options.max = newMaxIdx;
+         this.widgets[4].value = newMaxIdx;
          this.index = newMaxIdx;
          updateWidgetValues(this);
          // Remove extra values
