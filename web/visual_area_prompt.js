@@ -21,7 +21,7 @@ const _ID = "VisualAreaPrompt";
 const _PREFIX = "area-conditioning_";
 // Type of the input to add
 const _TYPE = "CONDITIONING";
-// Defaults for area widgets
+// Defaults for area widgets (make sure to copy, or it will be modified)
 const _AREA_DEFAULTS = [0.0, 0.0, 1.0, 1.0, 1.0];
 
 const TypeSlot = { Input: 1, Output: 2 };
@@ -144,7 +144,7 @@ function updateWidgetValues(node) {
    }
    const areaValues = node.properties["area_values"][node.index];
    // Set the value to the index's value, or the default
-   _AREA_DEFAULTS.forEach((value, i) => {
+   [..._AREA_DEFAULTS].forEach((value, i) => {
       const newValue = areaValues[i] || value;
       node.properties["area_values"][node.index][i] = newValue;
       // Offset by two because there are two widgets that should not change (graph and id)
@@ -167,7 +167,7 @@ app.registerExtension({
          // Setup index for current conditioning
          this.index = 0;
          // Set properties for the elements (first is initialized because of index 0)
-         this.setProperty("area_values", [_AREA_DEFAULTS]);
+         this.setProperty("area_values", [..._AREA_DEFAULTS]);
          // Add the canvas
          addAreaGraphWidget(this);
          // Add area selection control
@@ -177,7 +177,7 @@ app.registerExtension({
          }, { min: 0, max: 0, step: 10, precision: 0 });
          // Add conditioning controls
          ["x", "y", "width", "height", "strength"].forEach((name, i) => {
-            addNumberInput(this, name, _AREA_DEFAULTS[i], (value, _, node) => {
+            addNumberInput(this, name, [..._AREA_DEFAULTS][i], (value, _, node) => {
                node.properties["area_values"][node.index][i] = value;
             }, { min: 0, max: i === 4 ? 10 : 1, step: 0.1, precision: 2 });
          });
