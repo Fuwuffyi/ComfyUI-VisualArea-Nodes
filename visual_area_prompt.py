@@ -8,8 +8,8 @@ class VisualAreaPrompt:
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "general_conditioning": ("CONDITIONING", { "tooltip": "Base conditioning. Will be concatenated to all other conditionings." }),
-                "global_conditioning": ("CONDITIONING", { "tooltip": "Base conditioning. Will be applied to the whole image once." }),
+                "all_area_conditioning": ("CONDITIONING", { "tooltip": "Base conditioning. Will be concatenated to all other conditionings, including global." }),
+                "global_conditioning": ("CONDITIONING", { "tooltip": "Will be applied to the whole image once." }),
                 "merge_global": ("BOOLEAN", { "default": False, "tooltip": "Turning this on will make it so that the global conditioning will be concatenated to all other conditionings before being applied. (will not affect combined_conditioning output)." }),
             },
             "hidden": {
@@ -25,7 +25,7 @@ class VisualAreaPrompt:
     OUTPUT_NODE = False
     CATEGORY = "RegionalPrompt"
 
-    def run_node(self, general_conditioning, global_conditioning, merge_global, extra_pnginfo, unique_id, **kwargs):
+    def run_node(self, all_area_conditioning, global_conditioning, merge_global, extra_pnginfo, unique_id, **kwargs):
         # Get values for the conditioning areas from the extra_pnginfo
         conditioning_areas: list[list[float]] = []
         for node in extra_pnginfo["workflow"]["nodes"]:
@@ -38,7 +38,7 @@ class VisualAreaPrompt:
         # Create graph to evaluate the node
         graph: GraphBuilder = GraphBuilder()
         # Concat all other conditionings (to: (to: (to: general, from cond1), from cond2), from cond3... ... from global)
-        last_concat: Node = graph.node("ConditioningConcat", conditioning_to=general_conditioning, conditioning_from=conditionings[0])
+        last_concat: Node = graph.node("ConditioningConcat", conditioning_to=all_area_conditioning, conditioning_from=conditionings[0])
         # Start loop from the second element (first already concatenated)
         for cond in conditionings[1:]:
             last_concat: Node = graph.node("ConditioningConcat", conditioning_to=last_concat.out(0), conditioning_from=cond)
@@ -47,7 +47,7 @@ class VisualAreaPrompt:
         # Concat general to all other area conditionings (to: general, from: cond)
         conditionings_general: list = []
         for cond in conditionings:
-            conditionings_general.append(graph.node("ConditioningConcat", conditioning_to=general_conditioning, conditioning_from=cond))
+            conditionings_general.append(graph.node("ConditioningConcat", conditioning_to=all_area_conditioning, conditioning_from=cond))
         # Apply area with percentage from conditionings
         conditionings_area: list = []
         for i in range(len(conditionings_general)):

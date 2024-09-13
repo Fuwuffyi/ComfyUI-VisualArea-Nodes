@@ -15,7 +15,7 @@ const CANVAS_BORDER_COLOR = "#000000";
 // Id of the node
 const _ID = "VisualAreaPrompt";
 // Prefix of the input to add
-const _PREFIX = "area-conditioning_";
+const _PREFIX = "area_conditioning_";
 // Type of the input to add
 const _TYPE = "CONDITIONING";
 // Defaults for area widgets (make sure to copy, or it will be modified)
@@ -183,12 +183,12 @@ app.registerExtension({
          // Add the canvas
          addAreaGraphWidget(this);
          // Add area selection control
-         addNumberInput(this, "id", 0, (value, _, node) => {
+         addNumberInput(this, "area_id", 0, (value, _, node) => {
             node.index = value;
             updateWidgetValues(node);
          }, { min: 0, max: 0, step: 10, precision: 0 });
          // Add conditioning controls
-         ["x", "y", "width", "height", "strength"].forEach((name, i) => {
+         ["x", "y", "width", "height", "conditioning_strength"].forEach((name, i) => {
             addNumberInput(this, name, [..._AREA_DEFAULTS][i], (value, _, node) => {
                node.properties["area_values"][node.index][i] = value;
             }, { min: 0, max: i === 4 ? 10 : 1, step: 0.1, precision: 2 });
@@ -228,7 +228,7 @@ app.registerExtension({
             // Remove the input
             this.removeInput(slot_idx);
          }
-         let slot_tracker = {};
+         let counter = 0;
          let idx = 0;
          for (const slot of this.inputs) {
             // Skip static nodes
@@ -242,12 +242,8 @@ app.registerExtension({
                continue;
             }
             idx += 1;
-            const name = slot.name.split('_')[0];
-            // Correctly increment the count in slot_tracker
-            const count = (slot_tracker[name] || 0) + 1;
-            slot_tracker[name] = count;
             // Update the slot name with the count if greater than 1
-            slot.name = `${name}_${count - 1}`;
+            slot.name = `${_PREFIX}${counter++}`;
          }
          // Set ID widget new max and value
          const countDynamicInputs = this.inputs.filter((input) => input.name.includes(_PREFIX)).length;
