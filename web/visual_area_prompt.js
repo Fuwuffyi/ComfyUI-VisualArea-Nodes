@@ -140,6 +140,7 @@ function updateWidgetValues(node, index) {
    _AREA_DEFAULTS.forEach((value, i) => {
       const newValue = areaValues[i] || value;
       node.properties["area_values"][index][i] = newValue;
+      // Offset by two because there are two widgets that should not change (graph and id)
       node.widgets[i + 2].value = newValue;
    });
 }
@@ -183,77 +184,77 @@ app.registerExtension({
       nodeType.prototype.onConnectionsChange = function(slotType, slot_idx, event, link_info, node_slot) {
          // Change the connections like normal
          const me = onConnectionsChange?.apply(this, arguments);
-         // Get all dynamic inputs
-         const dynamicInputs = this.inputs.filter((input) => input.name.includes(_PREFIX));
-         // Only for inputs
-         if (slotType === TypeSlot.Input) {
-            // Skip non dynamic
-            if (!dynamicInputs.includes(node_slot)) {
-               return me;
-            } else if (link_info && event === true) { // If connects
-               // Get the parent (left side node) from the link
-               const fromNode = this.graph._nodes.find(
-                  (otherNode) => otherNode.id == link_info.origin_id
-               )
-               if (fromNode) {
-                  // Make sure there is a parent for the link
-                  const parent_link = fromNode.outputs[link_info.origin_slot];
-                  if (parent_link) {
-                     node_slot.type = parent_link.type;
-                     node_slot.name = `${_PREFIX}_`;
-                  }
-               }
-            } else if (event === false) { // If disconnects
-               // Remove the input
-               this.removeInput(slot_idx);
-            }
-            let slot_tracker = {};
-            let idx = 0;
-            for (const slot of this.inputs) {
-               // Skip static nodes
-               if (!dynamicInputs.includes(slot)) {
-                  idx += 1;
-                  continue;
-               }
-               // Remove unlinked dynamic nodes
-               if (slot.link === null) {
-                  this.removeInput(idx);
-                  continue;
-               }
-               idx += 1;
-               const name = slot.name.split('_')[0];
-               // Correctly increment the count in slot_tracker
-               const count = (slot_tracker[name] || 0) + 1;
-               slot_tracker[name] = count;
-               // Update the slot name with the count if greater than 1
-               slot.name = `${name}_${count - 1}`;
-            }
-            // Set ID widgets to new max index to create base values
-            const countDynamicInputs = this.inputs.filter((input) => input.name.includes(_PREFIX)).length;
-            const newMaxIdx = (countDynamicInputs - 1) >= 0 ? (countDynamicInputs - 1) : 0;
-            this.widgets[1].options.max = newMaxIdx;
-            updateWidgetValues(this, newMaxIdx);
-            // Restore widget values
-            updateWidgetValues(this, this.index);
-            // Remove extra values
-            this.properties["area_values"] = this.properties["area_values"].slice(0, countDynamicInputs);
-            // Create a list of all dynamic inputs by filtering out static inputs.
-            const dynamicIndices = this.inputs
-               .map((_input, index) => ({ index: index, input: _input }))
-               .filter((obj) => dynamicInputs.includes(obj.input))
-               .map((obj) => obj.index);
-            // Find the last dynamic input index
-            const lastDynamicInputIndex = dynamicIndices[dynamicIndices.length - 1];
-            const lastDynamicInput = this.inputs[lastDynamicInputIndex];
-            // Check if last dynamic input is defined and matches the prefix/type
-            if (lastDynamicInput === undefined || (lastDynamicInput.name !== _PREFIX || lastDynamicInput.type !== _TYPE)) {
-               // Add last input to fix the removed ones
-               this.addInput(_PREFIX, _TYPE);
-            }
-            // Return node
-            this?.graph?.setDirtyCanvas(true);
+         // Skip if it's not an input
+         if (slotType !== TypeSlot.Input) {
             return me;
          }
+         // Get all dynamic inputs
+         const dynamicInputs = this.inputs.filter((input) => input.name.includes(_PREFIX));
+         // Skip if it's not a dynamic input
+         if (!dynamicInputs.includes(node_slot)) {
+            return me;
+         }
+         if (link_info && event === true) { // If connects
+            // Get the parent (left side node) from the link
+            const fromNode = this.graph._nodes.find(otherNode => otherNode.id == link_info.origin_id);
+            if (fromNode) {
+               // Make sure there is a parent for the link
+               const parentLink = fromNode.outputs[link_info.origin_slot];
+               if (parentLink) {
+                  node_slot.type = parentLink.type;
+                  node_slot.name = _PREFIX;
+               }
+            }
+         } else if (event === false) { // If disconnects
+            // Remove the input
+            this.removeInput(slot_idx);
+         }
+         let slot_tracker = {};
+         let idx = 0;
+         for (const slot of this.inputs) {
+            // Skip static nodes
+            if (!dynamicInputs.includes(slot)) {
+               idx += 1;
+               continue;
+            }
+            // Remove unlinked dynamic nodes
+            if (slot.link === null) {
+               this.removeInput(idx);
+               continue;
+            }
+            idx += 1;
+            const name = slot.name.split('_')[0];
+            // Correctly increment the count in slot_tracker
+            const count = (slot_tracker[name] || 0) + 1;
+            slot_tracker[name] = count;
+            // Update the slot name with the count if greater than 1
+            slot.name = `${name}_${count - 1}`;
+         }
+         // Set ID widgets to new max index to create base values
+         const countDynamicInputs = this.inputs.filter((input) => input.name.includes(_PREFIX)).length;
+         const newMaxIdx = (countDynamicInputs - 1) >= 0 ? (countDynamicInputs - 1) : 0;
+         this.widgets[1].options.max = newMaxIdx;
+         updateWidgetValues(this, newMaxIdx);
+         // Restore widget values
+         updateWidgetValues(this, this.index);
+         // Remove extra values
+         this.properties["area_values"] = this.properties["area_values"].slice(0, countDynamicInputs);
+         // Create a list of all dynamic inputs by filtering out static inputs.
+         const dynamicIndices = this.inputs
+            .map((_input, index) => ({ index: index, input: _input }))
+            .filter((obj) => dynamicInputs.includes(obj.input))
+            .map((obj) => obj.index);
+         // Find the last dynamic input index
+         const lastDynamicInputIndex = dynamicIndices[dynamicIndices.length - 1];
+         const lastDynamicInput = this.inputs[lastDynamicInputIndex];
+         // Check if last dynamic input is defined and matches the prefix/type
+         if (lastDynamicInput === undefined || (lastDynamicInput.name !== _PREFIX || lastDynamicInput.type !== _TYPE)) {
+            // Add last input to fix the removed ones
+            this.addInput(_PREFIX, _TYPE);
+         }
+         // Return node
+         this?.graph?.setDirtyCanvas(true);
+         return me;
       }
       return nodeType;
    }
