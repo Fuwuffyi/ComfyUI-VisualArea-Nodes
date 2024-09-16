@@ -8,18 +8,58 @@ const CANVAS_MIN_SIZE = 200;
 const CANVAS_MARGIN = 6;
 // Border size of the canvas
 const CANVAS_BORDER = 2;
-// Border color of the canvas
-const CANVAS_BORDER_COLOR = "#000000";
+// Values used to generate a grid on the canvas
+const CANVAS_GRID_VALUES = rangeFloat(0.0, 1.0, 21);
 // Area border size
-const AREA_BORDER_SIZE = 5;
+const AREA_BORDER_SIZE = 3;
+
+// Constructs an array of cardinality evenly spaced floats
+function rangeFloat(start, end, cardinality, endpoint = true) {
+   const div = endpoint ? (cardinality - 1) : cardinality;
+   const step = (end - start) / div;
+   return Array.from({ length: cardinality }, (_, i) => start + step * i).map((val, i, arr) =>
+      endpoint && i === arr.length - 1 ? end : val);
+}
+
+// Convert an rgb hex color to hsl
+function hexToHsl(hex) {
+   const r = parseInt(hex.slice(1, 3), 16) / 255;
+   const g = parseInt(hex.slice(3, 5), 16) / 255;
+   const b = parseInt(hex.slice(5, 7), 16) / 255;
+   const max = Math.max(r, g, b), min = Math.min(r, g, b);
+   let h, s, l = (max + min) / 2;
+   if (max === min) {
+      h = s = 0;
+   } else {
+      const d = max - min;
+      s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+      switch (max) {
+         case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+         case g: h = (b - r) / d + 2; break;
+         case b: h = (r - g) / d + 4; break;
+      }
+      h /= 6;
+   }
+   h = Math.round(h * 360);
+   s = Math.round(s * 100);
+   l = Math.round(l * 100);
+   return `hsl(${h}, ${s}%, ${l}%)`;
+}
+
+// Darkens an hsl color value
+function brightenHsl(hsl, amount) {
+   let [h, s, l, a = 1] = hsl.match(/[\d.]+/g).map(Number);
+   l = Math.min(100, Math.max(0, l * amount));
+   return `hsl(${h}, ${s}%, ${l}%, ${a})`;
+}
 
 // Function to generate an hsl color, based on a value and a maximum range
-function generateHslColor(value, max, alpha = 1.0, lightness = 50) {
+function generateHslColor(value, max, alpha = 1.0) {
    if (max <= 0) {
       return `hsl(0, 0%, 0%, 1.0)`;
    }
    const hue = Math.round(((value % max) / max) * 360);
-   return `hsl(${hue}, 100%, ${lightness}%, ${alpha})`;
+   return `hsl(${hue}, 100%, 50%, ${alpha})`;
 }
 
 function computeCanvasSize(node, size) {
@@ -102,9 +142,20 @@ export function addAreaGraphWidget(node) {
          // Calculate widget positions
          const widgetX = xOffset;
          const widgetYOffset = widgetY + yOffset;
+         // Color stuff
+         const backgroundColor = hexToHsl(globalThis.LiteGraph.NODE_DEFAULT_BGCOLOR);
+         const borderColor = brightenHsl(backgroundColor, 0.4);
+         console.log(backgroundColor, borderColor);
          // Draw the canvas's background and border
-         drawRect(widgetX - CANVAS_BORDER, widgetYOffset - CANVAS_BORDER, backgroundWidth + CANVAS_BORDER * 2, backgroundHeight + CANVAS_BORDER * 2, CANVAS_BORDER_COLOR);
-         drawRect(widgetX, widgetYOffset, backgroundWidth, backgroundHeight, globalThis.LiteGraph.NODE_DEFAULT_BGCOLOR);
+         drawRect(widgetX - CANVAS_BORDER, widgetYOffset - CANVAS_BORDER, backgroundWidth + CANVAS_BORDER * 2, backgroundHeight + CANVAS_BORDER * 2, borderColor);
+         drawRect(widgetX, widgetYOffset, backgroundWidth, backgroundHeight, backgroundColor);
+         // Draw a grid
+         for (const value of CANVAS_GRID_VALUES) {
+            const [x1, y1, w1, h1] = getDrawArea([value, 0.0, 0.002, 1.0]);
+            const [x2, y2, w2, h2] = getDrawArea([0.0, value, 1.0, 0.002]);
+            drawRect(widgetX + x1, y1 + widgetYOffset, w1, h1, brightenHsl(backgroundColor, 0.6));
+            drawRect(widgetX + x2, y2 + widgetYOffset, w2, h2, brightenHsl(backgroundColor, 0.6));
+         }
          // Draw all conditioning areas
          const halfBorder = AREA_BORDER_SIZE / 2;
          values.forEach((v, k) => {
@@ -113,13 +164,15 @@ export function addAreaGraphWidget(node) {
                return;
             }
             const [x, y, w, h] = getDrawArea(v);
-            drawRect(widgetX + x, widgetYOffset + y, w, h, generateHslColor(k + 1, values.length, 0.3, 30));
-            drawRect(widgetX + x + halfBorder, widgetYOffset + y + halfBorder, w - AREA_BORDER_SIZE, h - AREA_BORDER_SIZE, generateHslColor(k + 1, values.length, 0.3));
+            const areaColor = generateHslColor(k + 1, values.length, 0.3, 30);
+            drawRect(widgetX + x, widgetYOffset + y, w, h, brightenHsl(areaColor, 0.7));
+            drawRect(widgetX + x + halfBorder, widgetYOffset + y + halfBorder, w - AREA_BORDER_SIZE, h - AREA_BORDER_SIZE, areaColor);
          });
          // Draw selected area
          const [x, y, w, h] = getDrawArea(values[node.index]);
-         drawRect(widgetX + x, widgetYOffset + y, w, h, generateHslColor(node.index + 1, values.length, 1.0, 30));
-         drawRect(widgetX + x + halfBorder, widgetYOffset + y + halfBorder, w - AREA_BORDER_SIZE, h - AREA_BORDER_SIZE, generateHslColor(node.index + 1, values.length));
+         const areaColor = generateHslColor(node.index + 1, values.length);
+         drawRect(widgetX + x, widgetYOffset + y, w, h, brightenHsl(areaColor, 0.7));
+         drawRect(widgetX + x + halfBorder, widgetYOffset + y + halfBorder, w - AREA_BORDER_SIZE, h - AREA_BORDER_SIZE, areaColor);
          if (node.is_selected) {
             node.inputs.filter(input => input.name.includes(node.index)).forEach(input => {
                const link = input.link;
