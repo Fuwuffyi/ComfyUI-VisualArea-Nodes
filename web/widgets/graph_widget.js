@@ -135,9 +135,8 @@ export function addAreaGraphWidget(node) {
          const widgetX = xOffset;
          const widgetYOffset = widgetY + yOffset;
          // Color stuff
-         const backgroundColor = hexToHsl(globalThis.LiteGraph.NODE_DEFAULT_BGCOLOR);
-         const borderColor = brightenHsl(backgroundColor, 0.4);
-         console.log(backgroundColor, borderColor);
+         const backgroundColor = hexToHsl(globalThis.LiteGraph.WIDGET_BGCOLOR);
+         const borderColor = hexToHsl(globalThis.LiteGraph.WIDGET_OUTLINE_COLOR);
          // Draw the canvas's background and border
          drawRect(widgetX - CANVAS_BORDER, widgetYOffset - CANVAS_BORDER, backgroundWidth + CANVAS_BORDER * 2, backgroundHeight + CANVAS_BORDER * 2, borderColor);
          drawRect(widgetX, widgetYOffset, backgroundWidth, backgroundHeight, backgroundColor);
