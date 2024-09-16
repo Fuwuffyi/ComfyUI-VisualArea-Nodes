@@ -10,14 +10,16 @@ const CANVAS_MARGIN = 6;
 const CANVAS_BORDER = 2;
 // Border color of the canvas
 const CANVAS_BORDER_COLOR = "#000000";
+// Area border size
+const AREA_BORDER_SIZE = 5;
 
 // Function to generate an hsl color, based on a value and a maximum range
-function generateHslColor(value, max, alpha) {
+function generateHslColor(value, max, alpha = 1.0, lightness = 50) {
    if (max <= 0) {
       return `hsl(0, 0%, 0%, 1.0)`;
    }
    const hue = Math.round(((value % max) / max) * 360);
-   return `hsl(${hue}, 100%, 50%, ${alpha})`;
+   return `hsl(${hue}, 100%, ${lightness}%, ${alpha})`;
 }
 
 function computeCanvasSize(node, size) {
@@ -101,17 +103,20 @@ export function addAreaGraphWidget(node) {
          drawRect(widgetX - CANVAS_BORDER, widgetYOffset - CANVAS_BORDER, backgroundWidth + CANVAS_BORDER * 2, backgroundHeight + CANVAS_BORDER * 2, CANVAS_BORDER_COLOR);
          drawRect(widgetX, widgetYOffset, backgroundWidth, backgroundHeight, globalThis.LiteGraph.NODE_DEFAULT_BGCOLOR);
          // Draw all conditioning areas
+         const halfBorder = AREA_BORDER_SIZE / 2;
          values.forEach((v, k) => {
             // Skip selected area to draw later on top
             if (k === node.index) {
                return;
             }
             const [x, y, w, h] = getDrawArea(v);
-            drawRect(widgetX + x, widgetYOffset + y, w, h, generateHslColor(k + 1, values.length, 0.3));
+            drawRect(widgetX + x, widgetYOffset + y, w, h, generateHslColor(k + 1, values.length, 0.3, 30));
+            drawRect(widgetX + x + halfBorder, widgetYOffset + y + halfBorder, w - AREA_BORDER_SIZE, h - AREA_BORDER_SIZE, generateHslColor(k + 1, values.length, 0.3));
          });
          // Draw selected area
          const [x, y, w, h] = getDrawArea(values[node.index]);
-         drawRect(widgetX + x, widgetYOffset + y, w, h, generateHslColor(node.index + 1, values.length, 0.8));
+         drawRect(widgetX + x, widgetYOffset + y, w, h, generateHslColor(node.index + 1, values.length, 1.0, 30));
+         drawRect(widgetX + x + halfBorder, widgetYOffset + y + halfBorder, w - AREA_BORDER_SIZE, h - AREA_BORDER_SIZE, generateHslColor(node.index + 1, values.length));
       }
    }
    widget.canvas = document.createElement("canvas");
