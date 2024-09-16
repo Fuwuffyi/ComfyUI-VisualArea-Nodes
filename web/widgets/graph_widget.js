@@ -120,6 +120,18 @@ export function addAreaGraphWidget(node) {
          const [x, y, w, h] = getDrawArea(values[node.index]);
          drawRect(widgetX + x, widgetYOffset + y, w, h, generateHslColor(node.index + 1, values.length, 1.0, 30));
          drawRect(widgetX + x + halfBorder, widgetYOffset + y + halfBorder, w - AREA_BORDER_SIZE, h - AREA_BORDER_SIZE, generateHslColor(node.index + 1, values.length));
+         if (node.is_selected) {
+            node.inputs.filter(input => input.name.includes(node.index)).forEach(input => {
+               const link = input.link;
+               if (link) {
+                  const nodeId = node.graph.links[link].origin_id;
+                  const connectedNode = node.graph._nodes_by_id[nodeId];
+                  const [x, y] = connectedNode.pos;
+                  const [w, h] = connectedNode.size;
+                  drawRect(x - node.pos[0], y - node.pos[1], w, h, generateHslColor(node.index + 1, values.length, 0.5));
+               }
+            });
+         }
       }
    }
    widget.canvas = document.createElement("canvas");
