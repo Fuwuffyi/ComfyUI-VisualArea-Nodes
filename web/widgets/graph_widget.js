@@ -23,7 +23,7 @@ function generateHslColor(value, max, alpha = 1.0, lightness = 50) {
 }
 
 function computeCanvasSize(node, size) {
-   if (node.widgets[3].last_y == null) {
+   if (node.widgets[0].last_y == null) {
       return;
    }
    const yBase = WIDGET_BASE_HEIGHT * Math.max(node.inputs.length, node.outputs.length) + 5;
@@ -54,7 +54,7 @@ export function addAreaGraphWidget(node) {
       name: "AreaConditioningCanvas",
       draw: function(ctx, node, widgetWidth, widgetY) {
          if (!node.canvasHeight) {
-            computeCanvasSize(node, node.size)
+            computeCanvasSize(node, node.size);
          }
          // Canvas variables
          const transform = ctx.getTransform();
@@ -93,6 +93,9 @@ export function addAreaGraphWidget(node) {
          }
          // Draws a rectangle on the canvas
          const drawRect = (x, y, w, h, color) => {
+            if (w <= 0 || h <= 0) {
+               return;
+            }
             ctx.fillStyle = color;
             ctx.fillRect(x, y, w, h);
          };
