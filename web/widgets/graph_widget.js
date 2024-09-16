@@ -9,17 +9,9 @@ const CANVAS_MARGIN = 6;
 // Border size of the canvas
 const CANVAS_BORDER = 2;
 // Values used to generate a grid on the canvas
-const CANVAS_GRID_VALUES = rangeFloat(0.0, 1.0, 21);
+const CANVAS_GRID_VALUES = Array.from({ length: 21 }, (_, i) => i / 20);
 // Area border size
 const AREA_BORDER_SIZE = 3;
-
-// Constructs an array of cardinality evenly spaced floats
-function rangeFloat(start, end, cardinality, endpoint = true) {
-   const div = endpoint ? (cardinality - 1) : cardinality;
-   const step = (end - start) / div;
-   return Array.from({ length: cardinality }, (_, i) => start + step * i).map((val, i, arr) =>
-      endpoint && i === arr.length - 1 ? end : val);
-}
 
 // Convert an rgb hex color to hsl
 function hexToHsl(hex) {
