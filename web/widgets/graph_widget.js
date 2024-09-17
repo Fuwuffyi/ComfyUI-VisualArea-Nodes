@@ -41,7 +41,7 @@ function hexToHsl(hex) {
 // Darkens an hsl color value
 function brightenHsl(hsl, amount) {
    const colorMatches = hsl.match(/[\d.]+/g);
-   let [h, s, l, a = 1] = colorMatches ? colorMatches.map(Number) : [0, 0, 100];
+   let [h, s, l, a = 1] = colorMatches ? colorMatches.map(Number) : [300, 100, 50];
    l = Math.min(100, Math.max(0, l * amount));
    return `hsl(${h}, ${s}%, ${l}%, ${a})`;
 }
