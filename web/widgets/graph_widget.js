@@ -144,8 +144,10 @@ export function addAreaGraphWidget(node) {
          for (const value of CANVAS_GRID_VALUES) {
             const [x1, y1, w1, h1] = getDrawArea([value, 0.0, 0.002, 1.0]);
             const [x2, y2, w2, h2] = getDrawArea([0.0, value, 1.0, 0.002]);
+            /*
             drawRect(widgetX + x1, y1 + widgetYOffset, w1, h1, brightenHsl(backgroundColor, 0.6));
             drawRect(widgetX + x2, y2 + widgetYOffset, w2, h2, brightenHsl(backgroundColor, 0.6));
+            */
          }
          // Draw all conditioning areas
          const halfBorder = AREA_BORDER_SIZE / 2;
@@ -156,13 +158,17 @@ export function addAreaGraphWidget(node) {
             }
             const [x, y, w, h] = getDrawArea(v);
             const areaColor = generateHslColor(k + 1, values.length, 0.3, 30);
+            /*
             drawRect(widgetX + x, widgetYOffset + y, w, h, brightenHsl(areaColor, 0.7));
+            */
             drawRect(widgetX + x + halfBorder, widgetYOffset + y + halfBorder, w - AREA_BORDER_SIZE, h - AREA_BORDER_SIZE, areaColor);
          });
          // Draw selected area
          const [x, y, w, h] = getDrawArea(values[node.index]);
          const areaColor = generateHslColor(node.index + 1, values.length);
+         /*
          drawRect(widgetX + x, widgetYOffset + y, w, h, brightenHsl(areaColor, 0.7));
+         */
          drawRect(widgetX + x + halfBorder, widgetYOffset + y + halfBorder, w - AREA_BORDER_SIZE, h - AREA_BORDER_SIZE, areaColor);
          if (node.is_selected) {
             node.inputs.filter(input => input.name.includes(node.index)).forEach(input => {
