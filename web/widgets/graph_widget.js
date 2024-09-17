@@ -81,15 +81,16 @@ function computeCanvasSize(node, size) {
    node.canvasHeight = remainingHeight;
 }
 
-export function addAreaGraphWidget(node) {
+export function addAreaGraphWidget(app, node, name) {
    const widget = {
       type: WIDGET_CANVAS_TYPE,
-      name: "AreaConditioningCanvas",
+      name: name,
       draw: function(ctx, node, widgetWidth, widgetY) {
          if (!node.canvasHeight) {
             computeCanvasSize(node, node.size);
          }
          // Canvas variables
+         const visible = app.canvas.ds.scale > 0.5;
          const transform = ctx.getTransform();
          const widgetHeight = node.canvasHeight;
          const imageWidth = node.properties["image_width"] || 512;
@@ -106,6 +107,7 @@ export function addAreaGraphWidget(node) {
             position: "absolute",
             zIndex: 1,
             pointerEvents: "none",
+            display: visible ? "block" : "none"
          });
          // Calculate canvas draw dimensions
          const backgroundWidth = imageWidth * scale;
@@ -141,6 +143,9 @@ export function addAreaGraphWidget(node) {
          // Draw the canvas's background and border
          drawRect(widgetX - CANVAS_BORDER, widgetYOffset - CANVAS_BORDER, backgroundWidth + CANVAS_BORDER * 2, backgroundHeight + CANVAS_BORDER * 2, borderColor);
          drawRect(widgetX, widgetYOffset, backgroundWidth, backgroundHeight, backgroundColor);
+         if (!visible) {
+            return;
+         }
          // Draw a grid
          for (const value of CANVAS_GRID_VALUES) {
             const [x1, y1, w1, h1] = getDrawArea([value, 0.0, 0.002, 1.0]);
@@ -181,6 +186,7 @@ export function addAreaGraphWidget(node) {
    }
    widget.canvas = document.createElement("canvas");
    widget.canvas.className = "fuwuffy-area-canvas";
+   widget.canvas.style.display = "none";
    widget.parent = node;
    document.body.appendChild(widget.canvas);
    node.addCustomWidget(widget);

@@ -36,7 +36,7 @@ function updateWidgetValues(node) {
 
 app.registerExtension({
    name: 'fuwuffy.' + _ID,
-   async beforeRegisterNodeDef(nodeType, nodeData, _app) {
+   async beforeRegisterNodeDef(nodeType, nodeData, app) {
       // Discard other nodes
       if (nodeData.name !== _ID) {
          return;
@@ -59,7 +59,7 @@ app.registerExtension({
             }, { min: 0, max: 4096, step: 640, precision: 0 });
          });
          // Add the canvas
-         addAreaGraphWidget(this);
+         addAreaGraphWidget(app, this, "area_conditioning_canvas");
          // Add area selection control
          addNumberInput(this, "area_id", 0, (value, _, node) => {
             node.index = value;
@@ -116,7 +116,9 @@ app.registerExtension({
             }
             // Remove unlinked dynamic nodes
             if (slot.link === null) {
-               this.removeInput(idx);
+               if (this.graph) {
+                  this.removeInput(idx);
+               }
                continue;
             }
             idx += 1;
