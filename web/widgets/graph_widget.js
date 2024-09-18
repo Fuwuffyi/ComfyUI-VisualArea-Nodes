@@ -1,5 +1,7 @@
 // Type of the canvas widget
 const WIDGET_CANVAS_TYPE = 'fuwuffyAreaCanvas';
+// The canvas's className
+const CANVAS_CLASS_NAME = 'fuwuffy-area-canvas';
 // Default height for all widgets
 const WIDGET_BASE_HEIGHT = LiteGraph.NODE_WIDGET_HEIGHT;
 // Default size for canvas widget
@@ -184,11 +186,12 @@ export function addAreaGraphWidget(app, node, name) {
          }
       }
    }
+   // Create a new canvas element
    widget.canvas = document.createElement("canvas");
-   widget.canvas.className = "fuwuffy-area-canvas";
+   widget.canvas.className = CANVAS_CLASS_NAME;
    widget.canvas.style.display = "none";
+   // Add the widget and canvas to the UI
    widget.parent = node;
-   document.body.appendChild(widget.canvas);
    node.addCustomWidget(widget);
    node.onResize = size => computeCanvasSize(node, size);
    return { widget };
