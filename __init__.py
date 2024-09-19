@@ -1,10 +1,10 @@
 """
-@author: Fuwuffy 
-@title: Area Prompts
-@nickname: AreaPrompts 
-@version: 0.1
-@project: "https://github.com/crystian/ComfyUI-Crystools",
-@description: Nodes used for more comfortable area prompting design. 
+@author: Fuwuffy
+@title: ComfyUI Visual Area Nodes
+@nickname: comfy-visual-area
+@version: 2.0
+@project: "https://github.com/Fuwuffyi/ComfyUI-VisualArea-Nodes",
+@description: This is a collection of nodes created to aid when managing area conditionings.
 """
 
 from .nodes.visual_area_prompt_advanced import VisualAreaPromptAdvanced
