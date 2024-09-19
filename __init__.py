@@ -7,14 +7,14 @@
 @description: Nodes used for more comfortable area prompting design. 
 """
 
-from .visual_area_prompt import VisualAreaPrompt
+from .nodes.visual_area_prompt import VisualAreaPromptAdvanced
 
 NODE_CLASS_MAPPINGS = {
-    "VisualAreaPrompt": VisualAreaPrompt 
+    "VisualAreaPromptAdvanced": VisualAreaPromptAdvanced
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
-    "VisualAreaPrompt": "Visual Area Prompt"
+    "VisualAreaPromptAdvanced": "Visual Area Prompt \"Advanced\""
 }
 
 WEB_DIRECTORY = "./web"

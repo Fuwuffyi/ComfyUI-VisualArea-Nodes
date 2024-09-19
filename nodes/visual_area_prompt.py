@@ -1,6 +1,6 @@
 from comfy_execution.graph_utils import GraphBuilder, Node
 
-class VisualAreaPrompt:
+class VisualAreaPromptAdvanced:
     def __init__(self) -> None:
         pass
 
@@ -10,7 +10,7 @@ class VisualAreaPrompt:
             "required": {
                 "all_area_conditioning": ("CONDITIONING", { "tooltip": "Base conditioning. Will be concatenated to all other conditionings, including global." }),
                 "global_conditioning": ("CONDITIONING", { "tooltip": "Will be applied to the whole image once." }),
-                "merge_global": ("BOOLEAN", { "default": False, "tooltip": "Turning this on will make it so that the global conditioning will be concatenated to all other conditionings before being applied. (will not affect combined_conditioning output)." }),
+                "merge_global": ("BOOLEAN", { "default": False, "tooltip": "Turning this on will make it so that the global conditioning will be concatenated to all other conditionings before being applied. (will not affect combined_conditioning output)." })
             },
             "hidden": {
                 "extra_pnginfo": "EXTRA_PNGINFO", 

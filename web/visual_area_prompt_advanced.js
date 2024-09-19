@@ -3,7 +3,7 @@ import { app } from "../../scripts/app.js";
 import { addAreaGraphWidget } from "./widgets/graph_widget.js"
 
 // Id of the node
-const _ID = "VisualAreaPrompt";
+const _ID = "VisualAreaPromptAdvanced";
 // Prefix of the input to add
 const _PREFIX = "area_conditioning_";
 // Type of the input to add
