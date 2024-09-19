@@ -7,7 +7,7 @@
 @description: Nodes used for more comfortable area prompting design. 
 """
 
-from .nodes.visual_area_prompt import VisualAreaPromptAdvanced
+from .nodes.visual_area_prompt_advanced import VisualAreaPromptAdvanced
 
 NODE_CLASS_MAPPINGS = {
     "VisualAreaPromptAdvanced": VisualAreaPromptAdvanced
