@@ -3,7 +3,7 @@ import { app } from "../../scripts/app.js";
 import { addAreaGraphWidget } from "./widgets/graph_widget.js"
 
 // Id of the node
-const _ID = "VisualAreaPromptAdvanced";
+const _ID = "VisualAreaPrompt";
 // Prefix of the input to add
 const _PREFIX = "area_conditioning_";
 // Type of the input to add
@@ -29,8 +29,8 @@ function updateWidgetValues(node) {
    [..._AREA_DEFAULTS].forEach((value, i) => {
       const newValue = areaValues[i] || value;
       node.properties["area_values"][node.index][i] = newValue;
-      // Offset by five because there are five widgets that should not change (boolean, imgWidth, imgHeight, graph and id)
-      node.widgets[i + 5].value = newValue;
+      // Offset by five because there are five widgets that should not change (imgWidth, imgHeight, graph and id)
+      node.widgets[i + 4].value = newValue;
    });
 }
 
@@ -59,7 +59,7 @@ app.registerExtension({
             }, { min: 0, max: 4096, step: 640, precision: 0 });
          });
          // Add the canvas
-         addAreaGraphWidget(app, this, "complex_area_conditioning_canvas");
+         addAreaGraphWidget(app, this, "area_conditioning_canvas");
          // Add area selection control
          addNumberInput(this, "area_id", 0, (value, _, node) => {
             node.index = value;
@@ -128,8 +128,8 @@ app.registerExtension({
          // Set ID widget new max and value
          const countDynamicInputs = this.inputs.filter((input) => input.name.includes(_PREFIX)).length;
          const newMaxIdx = (countDynamicInputs - 1) >= 0 ? (countDynamicInputs - 1) : 0;
-         this.widgets[4].options.max = newMaxIdx;
-         this.widgets[4].value = newMaxIdx;
+         this.widgets[3].options.max = newMaxIdx;
+         this.widgets[3].value = newMaxIdx;
          this.index = newMaxIdx;
          updateWidgetValues(this);
          // Remove extra values
