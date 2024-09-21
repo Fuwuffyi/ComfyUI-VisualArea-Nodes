@@ -40,7 +40,7 @@ class VisualAreaPrompt:
         # Apply area with percentage from conditionings
         conditionings_area: list = []
         for i in range(len(conditionings)):
-            cond = conditionings[i].out(0)
+            cond = conditionings[i]
             area_values: list[float] = conditioning_areas[i]
             conditionings_area.append(graph.node(
                 "ConditioningSetAreaPercentage",
