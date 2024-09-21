@@ -2,7 +2,7 @@
 @author: Fuwuffy
 @title: ComfyUI Visual Area Nodes
 @nickname: comfy-visual-area
-@version: 2.0
+@version: 2.0.1
 @project: "https://github.com/Fuwuffyi/ComfyUI-VisualArea-Nodes",
 @description: This is a collection of nodes created to aid when managing area conditionings.
 """
