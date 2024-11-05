@@ -27,7 +27,7 @@ class VisualAreaPromptAdvanced:
     OUTPUT_NODE = False
     CATEGORY = "RegionalPrompt"
 
-    def run_node(self, all_area_conditioning, global_conditioning, merge_global, _image_width, _image_height, extra_pnginfo, unique_id, **kwargs):
+    def run_node(self, all_area_conditioning, global_conditioning, merge_global, extra_pnginfo, unique_id, **kwargs):
         # Get values for the conditioning areas from the extra_pnginfo
         conditioning_areas: list[list[float]] = []
         for node in extra_pnginfo["workflow"]["nodes"]:
@@ -35,6 +35,9 @@ class VisualAreaPromptAdvanced:
             if node["id"] == int(unique_id):
                 conditioning_areas: list[list[float]] = node["properties"]["area_values"]
                 break
+        # Remove the data to skip (non conditionings)
+        skip_data: set[str] = {"image_width", "image_height"}
+        kwargs = {key: value for key, value in kwargs.items() if key not in skip_data}
         # Get the conditionings from kwargs
         conditionings: list = list(kwargs.values())
         # Create graph to evaluate the node
