@@ -10,7 +10,9 @@ class VisualAreaPromptAdvanced:
             "required": {
                 "all_area_conditioning": ("CONDITIONING", { "tooltip": "Base conditioning. Will be concatenated to all other conditionings, including global." }),
                 "global_conditioning": ("CONDITIONING", { "tooltip": "Will be applied to the whole image once." }),
-                "merge_global": ("BOOLEAN", { "default": False, "tooltip": "Turning this on will make it so that the global conditioning will be concatenated to all other conditionings before being applied. (will not affect combined_conditioning output)." })
+                "merge_global": ("BOOLEAN", { "default": False, "tooltip": "Turning this on will make it so that the global conditioning will be concatenated to all other conditionings before being applied. (will not affect combined_conditioning output)." }),
+                "image_width": ("INT", { "default": 1024, "min": 16, "max": 16384, "tooltip": "The width of the canvas. (only affects looks)." }),
+                "image_height": ("INT", { "default": 1024, "min": 16, "max": 16384, "tooltip": "The height of the canvas. (only affects looks)." })
             },
             "hidden": {
                 "extra_pnginfo": "EXTRA_PNGINFO", 
@@ -25,7 +27,7 @@ class VisualAreaPromptAdvanced:
     OUTPUT_NODE = False
     CATEGORY = "RegionalPrompt"
 
-    def run_node(self, all_area_conditioning, global_conditioning, merge_global, extra_pnginfo, unique_id, **kwargs):
+    def run_node(self, all_area_conditioning, global_conditioning, merge_global, _image_width, _image_height, extra_pnginfo, unique_id, **kwargs):
         # Get values for the conditioning areas from the extra_pnginfo
         conditioning_areas: list[list[float]] = []
         for node in extra_pnginfo["workflow"]["nodes"]:

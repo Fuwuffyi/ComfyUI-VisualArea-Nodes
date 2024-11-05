@@ -7,6 +7,10 @@ class VisualAreaPrompt:
     @classmethod
     def INPUT_TYPES(cls):
         return {
+            "required": {
+                "image_width": ("INT", { "default": 1024, "min": 16, "max": 16384, "tooltip": "The width of the canvas. (only affects looks)." }),
+                "image_height": ("INT", { "default": 1024, "min": 16, "max": 16384, "tooltip": "The height of the canvas. (only affects looks)." })
+            },
             "hidden": {
                 "extra_pnginfo": "EXTRA_PNGINFO", 
                 "unique_id": "UNIQUE_ID"
@@ -20,7 +24,7 @@ class VisualAreaPrompt:
     OUTPUT_NODE = False
     CATEGORY = "RegionalPrompt"
 
-    def run_node(self, extra_pnginfo, unique_id, **kwargs):
+    def run_node(self, _image_width, _image_height, extra_pnginfo, unique_id, **kwargs):
         # Get values for the conditioning areas from the extra_pnginfo
         conditioning_areas: list[list[float]] = []
         for node in extra_pnginfo["workflow"]["nodes"]:
