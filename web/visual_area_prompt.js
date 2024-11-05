@@ -26,7 +26,7 @@ function updateWidgetValues(node) {
   [..._AREA_DEFAULTS].forEach((value, i) => {
     const newValue = areaValues[i] || value;
     node.properties["area_values"][node.index][i] = newValue;
-    // Offset by five because there are five widgets that should not change (imgWidth, imgHeight, graph and id)
+    // Offset by four because there are five widgets that should not change (image_width, image_height, graph and id)
     node.widgets[i + 4].value = newValue;
   });
 }
@@ -34,7 +34,6 @@ function updateWidgetValues(node) {
 app.registerExtension({
   name: 'fuwuffy.' + _ID,
   async beforeRegisterNodeDef(nodeType, nodeData, app) {
-    console.log(app);
     // Discard other nodes
     if (nodeData.name !== _ID) {
       return;
@@ -48,7 +47,13 @@ app.registerExtension({
       this.index = 0;
       // Set properties for the elements (first is initialized because of index 0)
       this.setProperty("area_values", [..._AREA_DEFAULTS]);
-      // TODO: node.properties[image_width] = this.value
+      // Set width and height properties
+      ["image_width", "image_height"].forEach(name => {
+        const widget = this.widgets.find(elt => elt.name == name);
+        widget.callback = (value, _, node) => {
+          node.properties[name] = value;
+        }
+      });
       // Add the canvas
       addAreaGraphWidget(app, this, "area_conditioning_canvas");
       // Add area selection control

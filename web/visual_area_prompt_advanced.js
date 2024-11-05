@@ -47,7 +47,13 @@ app.registerExtension({
       this.index = 0;
       // Set properties for the elements (first is initialized because of index 0)
       this.setProperty("area_values", [..._AREA_DEFAULTS]);
-      // TODO: node.properties[image_width] = this.value
+      // Set width and height properties
+      ["image_width", "image_height"].forEach(name => {
+        const widget = this.widgets.find(elt => elt.name == name);
+        widget.callback = (value, _, node) => {
+          node.properties[name] = value;
+        }
+      });
       // Add the canvas
       addAreaGraphWidget(app, this, "complex_area_conditioning_canvas");
       // Add area selection control
